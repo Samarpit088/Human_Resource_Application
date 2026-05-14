@@ -1,7 +1,5 @@
 package com.example.Human_Resource_Managment.Entity;
 
-package com.example.employee.entity;
-
 import jakarta.persistence.*;
 import lombok.*;
 
