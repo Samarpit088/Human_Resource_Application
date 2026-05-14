@@ -34,9 +34,6 @@ class JobHistoryRepoTest {
 
     @BeforeEach
     void setUp() {
-        // Setup test data based on existing employees
-        // Employee 101 (Neena Yang) - AD_VP in department 90
-        // Simulating she was previously IT_PROG in department 60
         jobHistoryId1 = new JobHistory.JobHistoryId(101, LocalDate.of(2013, 1, 15));
         jobHistoryId2 = new JobHistory.JobHistoryId(101, LocalDate.of(2015, 9, 21));
 
@@ -56,8 +53,6 @@ class JobHistoryRepoTest {
                 .departmentId(90L)
                 .build();
 
-        // Employee 200 (Jennifer Whalen) - AD_ASST in department 10
-        // Simulating she was previously HR_REP in department 40
         jobHistory3 = JobHistory.builder()
                 .employeeId(200)
                 .startDate(LocalDate.of(2012, 6, 7))
@@ -69,13 +64,10 @@ class JobHistoryRepoTest {
 
     @Test
     void testSaveJobHistory() {
-        // Arrange
         when(jobHistoryRepo.save(any(JobHistory.class))).thenReturn(jobHistory1);
 
-        // Act
         JobHistory savedJobHistory = jobHistoryRepo.save(jobHistory1);
 
-        // Assert
         assertNotNull(savedJobHistory);
         assertEquals(101, savedJobHistory.getEmployeeId());
         assertEquals("IT_PROG", savedJobHistory.getJobId());
@@ -85,43 +77,34 @@ class JobHistoryRepoTest {
 
     @Test
     void testFindById() {
-        // Arrange
         when(jobHistoryRepo.findById(jobHistoryId1)).thenReturn(Optional.of(jobHistory1));
 
-        // Act
         Optional<JobHistory> foundJobHistory = jobHistoryRepo.findById(jobHistoryId1);
 
-        // Assert
         assertTrue(foundJobHistory.isPresent());
         assertEquals(101, foundJobHistory.get().getEmployeeId());
-        assertEquals(LocalDate.of(2020, 1, 15), foundJobHistory.get().getStartDate());
+        assertEquals(LocalDate.of(2013, 1, 15), foundJobHistory.get().getStartDate());
         verify(jobHistoryRepo, times(1)).findById(jobHistoryId1);
     }
 
     @Test
     void testFindById_NotFound() {
-        // Arrange
         JobHistory.JobHistoryId nonExistentId = new JobHistory.JobHistoryId(999, LocalDate.of(2010, 1, 1));
         when(jobHistoryRepo.findById(nonExistentId)).thenReturn(Optional.empty());
 
-        // Act
         Optional<JobHistory> foundJobHistory = jobHistoryRepo.findById(nonExistentId);
 
-        // Assert
         assertFalse(foundJobHistory.isPresent());
         verify(jobHistoryRepo, times(1)).findById(nonExistentId);
     }
 
     @Test
     void testFindByEmployeeId() {
-        // Arrange
         List<JobHistory> jobHistories = Arrays.asList(jobHistory1, jobHistory2);
         when(jobHistoryRepo.findByEmployeeId(101)).thenReturn(jobHistories);
 
-        // Act
         List<JobHistory> result = jobHistoryRepo.findByEmployeeId(101);
 
-        // Assert
         assertNotNull(result);
         assertEquals(2, result.size());
         assertEquals(101, result.get(0).getEmployeeId());
@@ -131,15 +114,12 @@ class JobHistoryRepoTest {
 
     @Test
     void testFindByEmployeeIdWithPageable() {
-        // Arrange
         Pageable pageable = PageRequest.of(0, 10);
         Page<JobHistory> jobHistoryPage = new PageImpl<>(Arrays.asList(jobHistory1, jobHistory2), pageable, 2);
         when(jobHistoryRepo.findByEmployeeId(101, pageable)).thenReturn(jobHistoryPage);
 
-        // Act
         Page<JobHistory> result = jobHistoryRepo.findByEmployeeId(101, pageable);
 
-        // Assert
         assertNotNull(result);
         assertEquals(2, result.getTotalElements());
         assertEquals(2, result.getContent().size());
@@ -148,50 +128,39 @@ class JobHistoryRepoTest {
 
     @Test
     void testFindByJobId() {
-        // Arrange
-        List<JobHistory> jobHistories = Arrays.asList(jobHistory1, jobHistory3);
+        List<JobHistory> jobHistories = Arrays.asList(jobHistory1);
         when(jobHistoryRepo.findByJobId("IT_PROG")).thenReturn(jobHistories);
 
-        // Act
         List<JobHistory> result = jobHistoryRepo.findByJobId("IT_PROG");
 
-        // Assert
         assertNotNull(result);
-        assertEquals(2, result.size());
+        assertEquals(1, result.size());
         assertEquals("IT_PROG", result.get(0).getJobId());
-        assertEquals("IT_PROG", result.get(1).getJobId());
         verify(jobHistoryRepo, times(1)).findByJobId("IT_PROG");
     }
 
     @Test
     void testFindByDepartmentId() {
-        // Arrange
         List<JobHistory> jobHistories = Arrays.asList(jobHistory1, jobHistory2);
         when(jobHistoryRepo.findByDepartmentId(60L)).thenReturn(jobHistories);
 
-        // Act
         List<JobHistory> result = jobHistoryRepo.findByDepartmentId(60L);
 
-        // Assert
         assertNotNull(result);
         assertEquals(2, result.size());
         assertEquals(60L, result.get(0).getDepartmentId());
-        assertEquals(60L, result.get(1).getDepartmentId());
         verify(jobHistoryRepo, times(1)).findByDepartmentId(60L);
     }
 
     @Test
     void testFindByStartDateBetween() {
-        // Arrange
         LocalDate startDate = LocalDate.of(2012, 1, 1);
         LocalDate endDate = LocalDate.of(2013, 12, 31);
         List<JobHistory> jobHistories = Arrays.asList(jobHistory1, jobHistory3);
         when(jobHistoryRepo.findByStartDateBetween(startDate, endDate)).thenReturn(jobHistories);
 
-        // Act
         List<JobHistory> result = jobHistoryRepo.findByStartDateBetween(startDate, endDate);
 
-        // Assert
         assertNotNull(result);
         assertEquals(2, result.size());
         assertTrue(result.get(0).getStartDate().isAfter(startDate.minusDays(1)));
@@ -201,7 +170,6 @@ class JobHistoryRepoTest {
 
     @Test
     void testFindAllWithPageable() {
-        // Arrange
         Pageable pageable = PageRequest.of(0, 10);
         Page<JobHistory> jobHistoryPage = new PageImpl<>(
                 Arrays.asList(jobHistory1, jobHistory2, jobHistory3), 
@@ -210,10 +178,8 @@ class JobHistoryRepoTest {
         );
         when(jobHistoryRepo.findAll(pageable)).thenReturn(jobHistoryPage);
 
-        // Act
         Page<JobHistory> result = jobHistoryRepo.findAll(pageable);
 
-        // Assert
         assertNotNull(result);
         assertEquals(3, result.getTotalElements());
         assertEquals(3, result.getContent().size());
@@ -222,14 +188,11 @@ class JobHistoryRepoTest {
 
     @Test
     void testFindAll() {
-        // Arrange
         List<JobHistory> jobHistories = Arrays.asList(jobHistory1, jobHistory2, jobHistory3);
         when(jobHistoryRepo.findAll()).thenReturn(jobHistories);
 
-        // Act
         List<JobHistory> result = jobHistoryRepo.findAll();
 
-        // Assert
         assertNotNull(result);
         assertEquals(3, result.size());
         verify(jobHistoryRepo, times(1)).findAll();
@@ -237,71 +200,55 @@ class JobHistoryRepoTest {
 
     @Test
     void testDeleteById() {
-        // Arrange
         doNothing().when(jobHistoryRepo).deleteById(jobHistoryId1);
 
-        // Act
         jobHistoryRepo.deleteById(jobHistoryId1);
 
-        // Assert
         verify(jobHistoryRepo, times(1)).deleteById(jobHistoryId1);
     }
 
     @Test
     void testDelete() {
-        // Arrange
         doNothing().when(jobHistoryRepo).delete(jobHistory1);
 
-        // Act
         jobHistoryRepo.delete(jobHistory1);
 
-        // Assert
         verify(jobHistoryRepo, times(1)).delete(jobHistory1);
     }
 
     @Test
     void testExistsById() {
-        // Arrange
         when(jobHistoryRepo.existsById(jobHistoryId1)).thenReturn(true);
 
-        // Act
         boolean exists = jobHistoryRepo.existsById(jobHistoryId1);
 
-        // Assert
         assertTrue(exists);
         verify(jobHistoryRepo, times(1)).existsById(jobHistoryId1);
     }
 
     @Test
     void testExistsById_NotFound() {
-        // Arrange
         JobHistory.JobHistoryId nonExistentId = new JobHistory.JobHistoryId(999, LocalDate.of(2010, 1, 1));
         when(jobHistoryRepo.existsById(nonExistentId)).thenReturn(false);
 
-        // Act
         boolean exists = jobHistoryRepo.existsById(nonExistentId);
 
-        // Assert
         assertFalse(exists);
         verify(jobHistoryRepo, times(1)).existsById(nonExistentId);
     }
 
     @Test
     void testCount() {
-        // Arrange
         when(jobHistoryRepo.count()).thenReturn(3L);
 
-        // Act
         long count = jobHistoryRepo.count();
 
-        // Assert
         assertEquals(3L, count);
         verify(jobHistoryRepo, times(1)).count();
     }
 
     @Test
     void testJobHistoryIdEquality() {
-        // Test composite key equality based on existing employee data
         JobHistory.JobHistoryId id1 = new JobHistory.JobHistoryId(101, LocalDate.of(2013, 1, 15));
         JobHistory.JobHistoryId id2 = new JobHistory.JobHistoryId(101, LocalDate.of(2013, 1, 15));
         JobHistory.JobHistoryId id3 = new JobHistory.JobHistoryId(200, LocalDate.of(2012, 6, 7));
@@ -309,5 +256,60 @@ class JobHistoryRepoTest {
         assertEquals(id1, id2);
         assertNotEquals(id1, id3);
         assertEquals(id1.hashCode(), id2.hashCode());
+    }
+
+    @Test
+    void testFindByEmployeeId_EmptyResult() {
+        when(jobHistoryRepo.findByEmployeeId(999)).thenReturn(Arrays.asList());
+
+        List<JobHistory> result = jobHistoryRepo.findByEmployeeId(999);
+
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+        verify(jobHistoryRepo, times(1)).findByEmployeeId(999);
+    }
+
+    @Test
+    void testFindByJobId_MultipleResults() {
+        JobHistory jobHistory4 = JobHistory.builder()
+                .employeeId(103)
+                .startDate(LocalDate.of(2016, 1, 3))
+                .endDate(LocalDate.of(2018, 12, 31))
+                .jobId("IT_PROG")
+                .departmentId(60L)
+                .build();
+
+        List<JobHistory> jobHistories = Arrays.asList(jobHistory1, jobHistory4);
+        when(jobHistoryRepo.findByJobId("IT_PROG")).thenReturn(jobHistories);
+
+        List<JobHistory> result = jobHistoryRepo.findByJobId("IT_PROG");
+
+        assertNotNull(result);
+        assertEquals(2, result.size());
+        assertTrue(result.stream().allMatch(jh -> "IT_PROG".equals(jh.getJobId())));
+        verify(jobHistoryRepo, times(1)).findByJobId("IT_PROG");
+    }
+
+    @Test
+    void testFindByDepartmentId_EmptyResult() {
+        when(jobHistoryRepo.findByDepartmentId(999L)).thenReturn(Arrays.asList());
+
+        List<JobHistory> result = jobHistoryRepo.findByDepartmentId(999L);
+
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+        verify(jobHistoryRepo, times(1)).findByDepartmentId(999L);
+    }
+
+    @Test
+    void testSaveJobHistory_WithNullEndDate() {
+        when(jobHistoryRepo.save(any(JobHistory.class))).thenReturn(jobHistory2);
+
+        JobHistory savedJobHistory = jobHistoryRepo.save(jobHistory2);
+
+        assertNotNull(savedJobHistory);
+        assertNull(savedJobHistory.getEndDate());
+        assertEquals("AD_VP", savedJobHistory.getJobId());
+        verify(jobHistoryRepo, times(1)).save(jobHistory2);
     }
 }

@@ -4,7 +4,7 @@ import com.example.Human_Resource_Managment.Entity.Department;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.context.SpringBootTest;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -14,7 +14,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@DataJpaTest
+@SpringBootTest
 class DepartmentsRepoTest {
 
     @Autowired
@@ -29,16 +29,16 @@ class DepartmentsRepoTest {
     void testFindAll_WhenDepartmentsExist_ReturnDepartmentList() {
 
         Department department1 = new Department();
-        department1.setDepartment_id(1L);
-        department1.setDepartment_name("HR");
-        department1.setManager_id(101L);
-        department1.setLocation_id(1001L);
+        department1.setDepartmentId(1L);
+        department1.setDepartmentName("HR");
+        department1.setManagerId(101L);
+        department1.setLocationId(1001L);
 
         Department department2 = new Department();
-        department2.setDepartment_id(2L);
-        department2.setDepartment_name("IT");
-        department2.setManager_id(102L);
-        department2.setLocation_id(1002L);
+        department2.setDepartmentId(2L);
+        department2.setDepartmentName("IT");
+        department2.setManagerId(102L);
+        department2.setLocationId(1002L);
 
         departmentRepo.saveAll(List.of(department1, department2));
 
@@ -50,10 +50,10 @@ class DepartmentsRepoTest {
         assertEquals(2, result.getContent().size());
 
         assertEquals("HR",
-                result.getContent().get(0).getDepartment_name());
+                result.getContent().get(0).getDepartmentName());
 
         assertEquals("IT",
-                result.getContent().get(1).getDepartment_name());
+                result.getContent().get(1).getDepartmentName());
     }
 
     /**
