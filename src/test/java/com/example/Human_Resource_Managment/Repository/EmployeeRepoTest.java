@@ -19,13 +19,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@TestPropertySource(properties = {
-        "spring.datasource.url=jdbc:mysql://localhost:3306/hr",
-        "spring.datasource.username=root",
-        "spring.datasource.password=root1234",
-        "spring.jpa.hibernate.ddl-auto=none",
-//        "spring.jpa.show-sql=true"
-})
 class EmployeeRepoTest {
 
     @Autowired
