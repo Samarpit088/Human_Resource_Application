@@ -10,19 +10,90 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.annotation.Rollback;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 @DataJpaTest
+@Rollback(false)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class EmployeeRepoTest {
 
     @Autowired
     private EmployeeRepo employeeRepo;
+
+    // =========================================================
+    // save()
+    // =========================================================
+
+    @Test
+    @DisplayName("REPO_SAVE_001 : Save employee")
+    void testSaveEmployee() {
+
+        Employees employee = new Employees();
+
+        employee.setEmployeeId(999);
+
+        employee.setFirstName("Navya");
+        employee.setLastName("Aggarwal");
+
+        // keep unique email to avoid duplicate constraint
+        employee.setEmail("NAVYA999");
+
+        employee.setPhoneNumber("9999999999");
+
+        employee.setHireDate(LocalDate.now());
+
+        // Existing values from DB
+        employee.setJobId("IT_PROG");
+        employee.setDepartmentId(60);
+        employee.setManagerId(103);
+
+        employee.setSalary(BigDecimal.valueOf(5000));
+
+        Employees savedEmployee =
+                employeeRepo.save(employee);
+
+        assertNotNull(savedEmployee);
+
+        assertEquals(
+                "Navya",
+                savedEmployee.getFirstName()
+        );
+
+        assertEquals(
+                "NAVYA999",
+                savedEmployee.getEmail()
+        );
+
+        System.out.println("Saved Employee Details");
+
+        System.out.println(
+                "Employee ID : "
+                        + savedEmployee.getEmployeeId()
+        );
+
+        System.out.println(
+                "Name : "
+                        + savedEmployee.getFirstName()
+                        + " "
+                        + savedEmployee.getLastName()
+        );
+
+        System.out.println(
+                "Email : "
+                        + savedEmployee.getEmail()
+        );
+
+        System.out.println(
+                "Department : "
+                        + savedEmployee.getDepartmentId()
+        );
+    }
 
     // =========================================================
     // findById()
@@ -230,6 +301,28 @@ class EmployeeRepoTest {
                 System.out.println(
                         emp.getFirstName()
                 )
+        );
+    }
+
+    // =========================================================
+    // deleteById()
+    // =========================================================
+
+    @Test
+    @DisplayName("REPO_DELETE_001 : Delete existing employee")
+    void testDeleteById() {
+
+        Integer employeeId = 999;
+
+        employeeRepo.deleteById(employeeId);
+
+        Optional<Employees> employee =
+                employeeRepo.findById(employeeId);
+
+        assertFalse(employee.isPresent());
+
+        System.out.println(
+                "Employee deleted successfully"
         );
     }
 

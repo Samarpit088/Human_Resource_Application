@@ -8,9 +8,7 @@ import lombok.*;
 
 @Entity
 @Table(name = "Locations")
-
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -34,6 +32,4 @@ public class Locations {
 
     @Column(name = "country_id", length = 4)
     private String countryId;
-
-
 }

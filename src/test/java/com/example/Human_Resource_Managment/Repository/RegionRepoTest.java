@@ -1,64 +1,44 @@
 package com.example.Human_Resource_Managment.Repository;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
-import java.util.Optional;
-
+import com.example.Human_Resource_Managment.Entity.Region;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 
-import com.example.Human_Resource_Managment.Entity.Region;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.test.context.TestPropertySource;
 
-@SpringBootTest
+import static org.junit.jupiter.api.Assertions.*;
+
+@DataJpaTest
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class RegionRepoTest {
 
     @Autowired
-    private RegionRepo regionRepository;
+    private RegionRepo regionRepo;
 
-//    @Test
-//    void testFindById() {
-//
-//        Optional<Region> region = regionRepository.findById(1);
-//
-//        assertTrue(region.isPresent());
-//    }
-//
-//    @Test
-//    void testFindByRegionName() {
-//
-//        Optional<Region> region =
-//                regionRepository.findByRegionName("Europe");
-//
-//        assertTrue(region.isPresent());
-//    }
-//
-//    @Test
-//    void testExistsByRegionName() {
-//
-//        boolean exists =
-//                regionRepository.existsByRegionName("Europe");
-//
-//        assertTrue(exists);
-//    }
+    @Test
+    void testFindAllRegions() {
 
-//    @Test
-//    void testFindAll() {
-//
-//        assertFalse(regionRepository.findAll().isEmpty());
-//    }g
+        // Fetch first page with 5 records
+        Page<Region> regions = regionRepo.findAll(PageRequest.of(0, 5));
 
-//    @Test
-//    void testSaveRegion() {
-//
-//        Region region = new Region();
-//        region.setRegionId(100);
-//        region.setRegionName("Test Region");
-//
-//        Region savedRegion = regionRepository.save(region);
-//
-//        assertNotNull(savedRegion);
-//    }
+        // Assertions
+        assertNotNull(regions);
+
+        // Print total regions count
+        System.out.println("Total Regions = " + regions.getTotalElements());
+
+        // Print fetched regions
+        regions.forEach(region -> {
+            System.out.println("Region ID: " + region.getRegionId());
+            System.out.println("Region Name: " + region.getRegionName());
+            System.out.println("------------------------");
+        });
+
+        // Optional check
+        assertFalse(regions.isEmpty());
+    }
 }
