@@ -17,18 +17,18 @@ public class Department {
     @Id
     @PositiveOrZero(message = "Department ID must be zero or greater")
     @Column(name = "department_id", precision = 4, scale = 0)
-    long department_id;
+    private Long departmentId;
 
     @NotBlank(message = "Department name cannot be empty")
     @Size(max = 30)
     @Column(name = "department_name", nullable = false, length = 30)
-    String department_name;
+    private String departmentName;
 
     @PositiveOrZero(message = "Manager ID must be zero or greater")
     @Column(name = "manager_id", precision = 6, scale = 0)
-    long manager_id;
+    private Long managerId;
 
     @PositiveOrZero(message = "Location ID must be zero or greater")
     @Column(name = "location_id", precision = 4, scale = 0)
-    long location_id;
+    private Long locationId;
 }
