@@ -8,8 +8,7 @@ import java.time.LocalDate;
 
 @Entity
 @Table(name = "job_history")
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -33,17 +32,19 @@ public class JobHistory {
     @Column(name = "department_id", precision = 4, scale = 0)
     private Long departmentId;
 
-    
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "employee_id", referencedColumnName = "employee_id", insertable = false, updatable = false)
+    @ToString.Exclude
     private Employees employee;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "job_id", referencedColumnName = "job_id", insertable = false, updatable = false)
+    @ToString.Exclude
     private Job job;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "department_id", referencedColumnName = "department_Id", insertable = false, updatable = false)
+    @ToString.Exclude
     private Department department;
 
     // Composite Primary Key Class
