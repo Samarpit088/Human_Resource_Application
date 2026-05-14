@@ -13,12 +13,12 @@ public interface EmployeeRepo extends JpaRepository<Employees, Integer> {
 
     boolean existsByEmail(String email);
 
-    Page<Employees> findByDepartmentDepartmentId(
+    Page<Employees> findByDepartmentId(
             Integer departmentId,
             Pageable pageable
     );
 
-    Page<Employees> findByJobJobId(
+    Page<Employees> findByJobId(
             String jobId,
             Pageable pageable
     );

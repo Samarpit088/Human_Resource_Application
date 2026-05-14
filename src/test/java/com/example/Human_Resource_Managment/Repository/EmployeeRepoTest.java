@@ -1,19 +1,17 @@
 package com.example.Human_Resource_Managment.Repository;
 
-import com.example.Human_Resource_Managment.Entity.Department;
 import com.example.Human_Resource_Managment.Entity.Employees;
-import com.example.Human_Resource_Managment.Entity.Job;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
-import org.springframework.boot.test.autoconfigure.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -72,25 +70,23 @@ class EmployeeRepoTest {
 //    @DisplayName("REPO_SAVE_001 : Save employee")
 //    void testSaveEmployee() {
 //
-//        Departments department = new Departments();
-//        department.setDepartmentId(60);
-//
-//        Jobs job = new Jobs();
-//        job.setJobId("IT_PROG");
-//
-//        Employees manager = new Employees();
-//        manager.setEmployeeId(103);
-//
 //        Employees employee = new Employees();
+//
+//        employee.setEmployeeId(999);
 //
 //        employee.setFirstName("Navya");
 //        employee.setLastName("Aggarwal");
 //        employee.setEmail("NAVAGGAR");
 //        employee.setPhoneNumber("9999999999");
+//        employee.setHireDate(LocalDate.now());
+//
+//        employee.setJobId("IT_PROG");
+//
 //        employee.setSalary(BigDecimal.valueOf(5000));
-//        employee.setDepartment(department);
-//        employee.setJob(job);
-//        employee.setManager(manager);
+//
+//        employee.setManagerId(103);
+//
+//        employee.setDepartmentId(60);
 //
 //        Employees savedEmployee =
 //                employeeRepo.save(employee);
@@ -106,21 +102,27 @@ class EmployeeRepoTest {
 //    @DisplayName("REPO_DELETE_001 : Delete employee")
 //    void testDeleteById() {
 //
-//        Departments department = new Departments();
-//        department.setDepartmentId(60);
-//
-//        Jobs job = new Jobs();
-//        job.setJobId("IT_PROG");
-//
 //        Employees employee = new Employees();
 //
+//        employee.setEmployeeId(998);
+//
 //        employee.setFirstName("Temp");
+//
 //        employee.setLastName("Delete");
+//
 //        employee.setEmail("TEMPDEL");
+//
 //        employee.setPhoneNumber("8888888888");
+//
+//        employee.setHireDate(LocalDate.now());
+//
+//        employee.setJobId("IT_PROG");
+//
 //        employee.setSalary(BigDecimal.valueOf(4000));
-//        employee.setDepartment(department);
-//        employee.setJob(job);
+//
+//        employee.setDepartmentId(60);
+//
+//        employee.setManagerId(103);
 //
 //        Employees savedEmployee =
 //                employeeRepo.save(employee);
@@ -185,17 +187,18 @@ class EmployeeRepoTest {
     }
 
     // =========================================================
-    // findByDepartmentDepartmentId()
+    // findByDepartmentId()
     // =========================================================
 
     @Test
     @DisplayName("REPO_FINDDEPT_001 : Valid department id")
-    void testFindByDepartmentDepartmentId() {
+    void testFindByDepartmentId() {
 
-        Pageable pageable = PageRequest.of(0, 5);
+        Pageable pageable =
+                PageRequest.of(0, 5);
 
         Page<Employees> employees =
-                employeeRepo.findByDepartmentDepartmentId(
+                employeeRepo.findByDepartmentId(
                         60,
                         pageable
                 );
@@ -205,12 +208,13 @@ class EmployeeRepoTest {
 
     @Test
     @DisplayName("REPO_FINDDEPT_002 : Invalid department id")
-    void testFindByDepartmentDepartmentId_Invalid() {
+    void testFindByDepartmentId_Invalid() {
 
-        Pageable pageable = PageRequest.of(0, 5);
+        Pageable pageable =
+                PageRequest.of(0, 5);
 
         Page<Employees> employees =
-                employeeRepo.findByDepartmentDepartmentId(
+                employeeRepo.findByDepartmentId(
                         999,
                         pageable
                 );
@@ -219,17 +223,18 @@ class EmployeeRepoTest {
     }
 
     // =========================================================
-    // findByJobJobId()
+    // findByJobId()
     // =========================================================
 
     @Test
     @DisplayName("REPO_FINDJOB_001 : Valid job id")
-    void testFindByJobJobId() {
+    void testFindByJobId() {
 
-        Pageable pageable = PageRequest.of(0, 5);
+        Pageable pageable =
+                PageRequest.of(0, 5);
 
         Page<Employees> employees =
-                employeeRepo.findByJobJobId(
+                employeeRepo.findByJobId(
                         "IT_PROG",
                         pageable
                 );
@@ -239,12 +244,13 @@ class EmployeeRepoTest {
 
     @Test
     @DisplayName("REPO_FINDJOB_002 : Invalid job id")
-    void testFindByJobJobId_Invalid() {
+    void testFindByJobId_Invalid() {
 
-        Pageable pageable = PageRequest.of(0, 5);
+        Pageable pageable =
+                PageRequest.of(0, 5);
 
         Page<Employees> employees =
-                employeeRepo.findByJobJobId(
+                employeeRepo.findByJobId(
                         "TEST_JOB",
                         pageable
                 );
@@ -260,7 +266,8 @@ class EmployeeRepoTest {
     @DisplayName("REPO_FINDSALARY_001 : Valid salary range")
     void testFindBySalaryBetween() {
 
-        Pageable pageable = PageRequest.of(0, 5);
+        Pageable pageable =
+                PageRequest.of(0, 5);
 
         Page<Employees> employees =
                 employeeRepo.findBySalaryBetween(
@@ -276,7 +283,8 @@ class EmployeeRepoTest {
     @DisplayName("REPO_FINDSALARY_002 : No employees in range")
     void testFindBySalaryBetween_NoMatch() {
 
-        Pageable pageable = PageRequest.of(0, 5);
+        Pageable pageable =
+                PageRequest.of(0, 5);
 
         Page<Employees> employees =
                 employeeRepo.findBySalaryBetween(
@@ -296,14 +304,14 @@ class EmployeeRepoTest {
     @DisplayName("REPO_FINDNAME_001 : Exact first name")
     void testFindByFirstNameContainingIgnoreCase() {
 
-        Pageable pageable = PageRequest.of(0, 5);
+        Pageable pageable =
+                PageRequest.of(0, 5);
 
         Page<Employees> employees =
-                employeeRepo
-                        .findByFirstNameContainingIgnoreCase(
-                                "Steven",
-                                pageable
-                        );
+                employeeRepo.findByFirstNameContainingIgnoreCase(
+                        "Steven",
+                        pageable
+                );
 
         assertFalse(employees.isEmpty());
     }
@@ -312,14 +320,14 @@ class EmployeeRepoTest {
     @DisplayName("REPO_FINDNAME_002 : Partial keyword")
     void testFindByFirstNameContainingIgnoreCase_Partial() {
 
-        Pageable pageable = PageRequest.of(0, 5);
+        Pageable pageable =
+                PageRequest.of(0, 5);
 
         Page<Employees> employees =
-                employeeRepo
-                        .findByFirstNameContainingIgnoreCase(
-                                "ste",
-                                pageable
-                        );
+                employeeRepo.findByFirstNameContainingIgnoreCase(
+                        "ste",
+                        pageable
+                );
 
         assertFalse(employees.isEmpty());
     }
@@ -328,14 +336,14 @@ class EmployeeRepoTest {
     @DisplayName("REPO_FINDNAME_003 : No matching records")
     void testFindByFirstNameContainingIgnoreCase_NoMatch() {
 
-        Pageable pageable = PageRequest.of(0, 5);
+        Pageable pageable =
+                PageRequest.of(0, 5);
 
         Page<Employees> employees =
-                employeeRepo
-                        .findByFirstNameContainingIgnoreCase(
-                                "xyz",
-                                pageable
-                        );
+                employeeRepo.findByFirstNameContainingIgnoreCase(
+                        "xyz",
+                        pageable
+                );
 
         assertTrue(employees.isEmpty());
     }
