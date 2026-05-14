@@ -40,11 +40,11 @@ public class JobHistory {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "job_id", referencedColumnName = "job_id", insertable = false, updatable = false)
-    private Jobs job;
+    private Job job;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "department_id", referencedColumnName = "department_Id", insertable = false, updatable = false)
-    private Departments department;
+    private Department department;
 
     // Composite Primary Key Class
     @Getter
