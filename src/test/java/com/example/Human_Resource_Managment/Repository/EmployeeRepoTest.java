@@ -4,10 +4,9 @@ import com.example.Human_Resource_Managment.Entity.Employees;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
-import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.jdbc.*;
 import org.springframework.boot.test.autoconfigure.*;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -25,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.*;
         "spring.datasource.username=root",
         "spring.datasource.password=root1234",
         "spring.jpa.hibernate.ddl-auto=none",
-        "spring.jpa.show-sql=true"
+//        "spring.jpa.show-sql=true"
 })
 class EmployeeRepoTest {
 
