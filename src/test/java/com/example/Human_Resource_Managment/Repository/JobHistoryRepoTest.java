@@ -34,32 +34,36 @@ class JobHistoryRepoTest {
 
     @BeforeEach
     void setUp() {
-        // Setup test data
-        jobHistoryId1 = new JobHistory.JobHistoryId(101, LocalDate.of(2020, 1, 15));
-        jobHistoryId2 = new JobHistory.JobHistoryId(101, LocalDate.of(2022, 6, 1));
+        // Setup test data based on existing employees
+        // Employee 101 (Neena Yang) - AD_VP in department 90
+        // Simulating she was previously IT_PROG in department 60
+        jobHistoryId1 = new JobHistory.JobHistoryId(101, LocalDate.of(2013, 1, 15));
+        jobHistoryId2 = new JobHistory.JobHistoryId(101, LocalDate.of(2015, 9, 21));
 
         jobHistory1 = JobHistory.builder()
                 .employeeId(101)
-                .startDate(LocalDate.of(2020, 1, 15))
-                .endDate(LocalDate.of(2022, 5, 31))
+                .startDate(LocalDate.of(2013, 1, 15))
+                .endDate(LocalDate.of(2015, 9, 20))
                 .jobId("IT_PROG")
                 .departmentId(60L)
                 .build();
 
         jobHistory2 = JobHistory.builder()
                 .employeeId(101)
-                .startDate(LocalDate.of(2022, 6, 1))
+                .startDate(LocalDate.of(2015, 9, 21))
                 .endDate(null)
-                .jobId("IT_MANAGER")
-                .departmentId(60L)
+                .jobId("AD_VP")
+                .departmentId(90L)
                 .build();
 
+        // Employee 200 (Jennifer Whalen) - AD_ASST in department 10
+        // Simulating she was previously HR_REP in department 40
         jobHistory3 = JobHistory.builder()
-                .employeeId(102)
-                .startDate(LocalDate.of(2021, 3, 10))
-                .endDate(LocalDate.of(2023, 12, 31))
-                .jobId("IT_PROG")
-                .departmentId(90L)
+                .employeeId(200)
+                .startDate(LocalDate.of(2012, 6, 7))
+                .endDate(LocalDate.of(2013, 9, 16))
+                .jobId("HR_REP")
+                .departmentId(40L)
                 .build();
     }
 
@@ -97,7 +101,7 @@ class JobHistoryRepoTest {
     @Test
     void testFindById_NotFound() {
         // Arrange
-        JobHistory.JobHistoryId nonExistentId = new JobHistory.JobHistoryId(999, LocalDate.of(2020, 1, 1));
+        JobHistory.JobHistoryId nonExistentId = new JobHistory.JobHistoryId(999, LocalDate.of(2010, 1, 1));
         when(jobHistoryRepo.findById(nonExistentId)).thenReturn(Optional.empty());
 
         // Act
@@ -179,8 +183,8 @@ class JobHistoryRepoTest {
     @Test
     void testFindByStartDateBetween() {
         // Arrange
-        LocalDate startDate = LocalDate.of(2020, 1, 1);
-        LocalDate endDate = LocalDate.of(2021, 12, 31);
+        LocalDate startDate = LocalDate.of(2012, 1, 1);
+        LocalDate endDate = LocalDate.of(2013, 12, 31);
         List<JobHistory> jobHistories = Arrays.asList(jobHistory1, jobHistory3);
         when(jobHistoryRepo.findByStartDateBetween(startDate, endDate)).thenReturn(jobHistories);
 
@@ -271,7 +275,7 @@ class JobHistoryRepoTest {
     @Test
     void testExistsById_NotFound() {
         // Arrange
-        JobHistory.JobHistoryId nonExistentId = new JobHistory.JobHistoryId(999, LocalDate.of(2020, 1, 1));
+        JobHistory.JobHistoryId nonExistentId = new JobHistory.JobHistoryId(999, LocalDate.of(2010, 1, 1));
         when(jobHistoryRepo.existsById(nonExistentId)).thenReturn(false);
 
         // Act
@@ -297,10 +301,10 @@ class JobHistoryRepoTest {
 
     @Test
     void testJobHistoryIdEquality() {
-        // Test composite key equality
-        JobHistory.JobHistoryId id1 = new JobHistory.JobHistoryId(101, LocalDate.of(2020, 1, 15));
-        JobHistory.JobHistoryId id2 = new JobHistory.JobHistoryId(101, LocalDate.of(2020, 1, 15));
-        JobHistory.JobHistoryId id3 = new JobHistory.JobHistoryId(102, LocalDate.of(2020, 1, 15));
+        // Test composite key equality based on existing employee data
+        JobHistory.JobHistoryId id1 = new JobHistory.JobHistoryId(101, LocalDate.of(2013, 1, 15));
+        JobHistory.JobHistoryId id2 = new JobHistory.JobHistoryId(101, LocalDate.of(2013, 1, 15));
+        JobHistory.JobHistoryId id3 = new JobHistory.JobHistoryId(200, LocalDate.of(2012, 6, 7));
 
         assertEquals(id1, id2);
         assertNotEquals(id1, id3);
