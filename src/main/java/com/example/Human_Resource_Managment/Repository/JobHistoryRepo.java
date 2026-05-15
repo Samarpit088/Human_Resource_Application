@@ -8,5 +8,5 @@ import java.util.List;
 
 public interface JobHistoryRepo extends JpaRepository<JobHistory, JobHistoryId> {
 
-    List<JobHistory> findByIdEmployeeId(Integer employeeId);
+    List<JobHistory> findByIdEmployeeId(Long employeeId);
 }
