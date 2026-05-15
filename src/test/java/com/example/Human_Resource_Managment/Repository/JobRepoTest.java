@@ -1,5 +1,6 @@
 package com.example.Human_Resource_Managment.Repository;
 
+import com.example.Human_Resource_Managment.Entity.Employees;
 import com.example.Human_Resource_Managment.Entity.Job;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +23,9 @@ class JobRepoTest {
 
     @Autowired
     private JobRepo jobRepo;
+
+    @Autowired
+    private EmployeeRepo employeeRepo;
 
     @Test
     void testFindAllJobs() {
@@ -173,5 +177,59 @@ class JobRepoTest {
         assertThrows(Exception.class, () -> {
             jobRepo.saveAndFlush(job);
         });
+    }
+    @Test
+    void testFindEmployeesByValidJobId() {
+
+        Page<Employees> employees =
+                employeeRepo.findByJobJobId("IT_PROG", PageRequest.of(0, 10));
+
+        assertNotNull(employees);
+
+        System.out.println("Total Employees with IT_PROG = " + employees.getTotalElements());
+
+        employees.forEach(employee -> {
+            System.out.println("Employee ID: " + employee.getEmployeeId());
+            System.out.println("First Name: " + employee.getFirstName());
+            System.out.println("Last Name: " + employee.getLastName());
+            System.out.println("Job ID: " + employee.getJob().getJobId());
+            System.out.println("------------------------");
+
+            assertEquals("IT_PROG", employee.getJob().getJobId());
+        });
+
+        assertFalse(employees.isEmpty());
+    }
+    @Test
+    void testFindEmployeesByInvalidJobId() {
+
+        Page<Employees> employees =
+                employeeRepo.findByJobJobId("INVALID_JOB", PageRequest.of(0, 10));
+
+        assertNotNull(employees);
+
+        System.out.println("Total Employees = " + employees.getTotalElements());
+
+        assertTrue(employees.isEmpty());
+    }
+    @Test
+    void testFindEmployeesByJobIdWithPagination() {
+
+        Page<Employees> employees =
+                employeeRepo.findByJobJobId("IT_PROG", PageRequest.of(0, 5));
+
+        assertNotNull(employees);
+
+        System.out.println("Page Size = " + employees.getSize());
+        System.out.println("Fetched Employees = " + employees.getNumberOfElements());
+        System.out.println("Total Employees = " + employees.getTotalElements());
+
+        employees.forEach(employee -> {
+            System.out.println("Employee ID: " + employee.getEmployeeId());
+            System.out.println("Job ID: " + employee.getJob().getJobId());
+            System.out.println("------------------------");
+        });
+
+        assertTrue(employees.getNumberOfElements() <= 5);
     }
 }

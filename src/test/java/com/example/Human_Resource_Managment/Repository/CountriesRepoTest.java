@@ -1,6 +1,8 @@
 package com.example.Human_Resource_Managment.Repository;
 
 import com.example.Human_Resource_Managment.Entity.Countries;
+import com.example.Human_Resource_Managment.Entity.Employees;
+import com.example.Human_Resource_Managment.Entity.Region;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -21,6 +23,12 @@ class CountriesRepoTest {
 
     @Autowired
     private CountriesRepo countriesRepo;
+
+    @Autowired
+    private RegionRepo regionRepo;
+
+    @Autowired
+    private EmployeeRepo employeeRepo;
 
     @Test
     void testFindAllCountries() {
@@ -72,5 +80,56 @@ class CountriesRepoTest {
         assertTrue(exists);
 
         System.out.println("Country Exists");
+    }
+    @Test
+    void testSaveCountry() {
+
+        Optional<Region> region =
+                regionRepo.findById(30);
+
+        Countries country = new Countries();
+
+        country.setCountryId("TS");
+        country.setCountryName("Test Country");
+        country.setRegion(region.get());
+
+        Countries savedCountry =
+                countriesRepo.save(country);
+
+        assertNotNull(savedCountry);
+
+        System.out.println("Saved Country = "
+                + savedCountry.getCountryName());
+    }
+    // COUNTRY_EMP_001
+    @Test
+    void testFindEmployeesByCountryName() {
+
+        Page<Employees> employees =
+                employeeRepo.findByDepartmentLocationCountryCountryNameContainingIgnoreCase(
+                        "United",
+                        PageRequest.of(0, 10)
+                );
+
+        assertNotNull(employees);
+
+        System.out.println("Total Employees = " + employees.getTotalElements());
+
+        employees.forEach(employee -> {
+
+            String countryName =
+                    employee.getDepartment()
+                            .getLocation()
+                            .getCountry()
+                            .getCountryName();
+
+            System.out.println("Employee ID: " + employee.getEmployeeId());
+            System.out.println("Country Name: " + countryName);
+            System.out.println("------------------------");
+
+            assertTrue(countryName.toLowerCase().contains("united"));
+        });
+
+        assertFalse(employees.isEmpty());
     }
 }
