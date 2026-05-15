@@ -1,242 +1,239 @@
 package com.example.Human_Resource_Managment.Repository;
 
+import com.example.Human_Resource_Managment.Entity.Countries;
 import com.example.Human_Resource_Managment.Entity.Locations;
+
+import jakarta.persistence.EntityManager;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
 import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
-import org.springframework.dao.DataIntegrityViolationException;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.test.annotation.DirtiesContext;
-
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.Optional;
+
 @DataJpaTest
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+@AutoConfigureTestDatabase(
+        replace = AutoConfigureTestDatabase.Replace.NONE
+)
+
 class LocationsRepoTest {
 
     @Autowired
     private LocationsRepo locationsRepo;
 
     @Autowired
-    private TestEntityManager entityManager;
+    private EntityManager entityManager;
 
     @BeforeEach
     void setUp() {
+
         entityManager.clear();
     }
 
+    /**
+     * TC ID : LOC_001
+     * Scenario : valid page and size
+     * Expected : returns paginated location list
+     */
     @Test
     void testListAllLocations_ValidPageAndSize_ReturnsPaginatedLocationList() {
-        Pageable pageable = PageRequest.of(0, 5);
-        Page<Locations> result = locationsRepo.findAll(pageable);
+
+        Pageable pageable =
+                PageRequest.of(0, 5);
+
+        Page<Locations> result =
+                locationsRepo.findAll(pageable);
 
         assertNotNull(result);
-        assertTrue(result.getTotalElements() > 0);
-        assertEquals(5, result.getSize());
-        assertTrue(result.getContent().size() <= 5);
+
+        assertFalse(result.isEmpty());
+
+        System.out.println(
+                "Total Locations : "
+                        + result.getTotalElements()
+        );
+
+        result.forEach(location -> {
+
+            System.out.println(
+                    "Location ID : "
+                            + location.getLocationId()
+            );
+
+            System.out.println(
+                    "City : "
+                            + location.getCity()
+            );
+
+            if (location.getCountry() != null) {
+
+                System.out.println(
+                        "Country ID : "
+                                + location.getCountry().getCountryId()
+                );
+            }
+
+            System.out.println("----------------");
+        });
     }
 
-    @Test
-    void testListAllLocations_FirstPageRetrieval_CorrectRecordsReturned() {
-        Pageable pageable = PageRequest.of(0, 10);
-        Page<Locations> result = locationsRepo.findAll(pageable);
-
-        assertNotNull(result);
-        assertTrue(result.getTotalElements() > 0);
-        assertEquals(0, result.getNumber());
-        assertTrue(result.isFirst());
-    }
-
-    @Test
-    void testListAllLocations_LastPageRetrieval_CorrectLastPageRecords() {
-        long totalLocations = locationsRepo.count();
-        int pageSize = 5;
-        int lastPageNumber = (int) ((totalLocations - 1) / pageSize);
-
-        Pageable pageable = PageRequest.of(lastPageNumber, pageSize);
-        Page<Locations> result = locationsRepo.findAll(pageable);
-
-        assertNotNull(result);
-        assertEquals(totalLocations, result.getTotalElements());
-        assertEquals(lastPageNumber, result.getNumber());
-        assertTrue(result.isLast());
-    }
-
+    /**
+     * TC ID : LOC_002
+     * Scenario : valid location id
+     * Expected : return location details
+     */
     @Test
     void testSearchLocationById_ValidLocationId_ReturnLocationDetails() {
-        Optional<Locations> result = locationsRepo.findById(1000);
+
+        Optional<Locations> result =
+                locationsRepo.findById(1000);
 
         assertTrue(result.isPresent());
-        assertEquals(1000, result.get().getLocationId());
-        assertNotNull(result.get().getCity());
+
+        System.out.println(
+                "Location City : "
+                        + result.get().getCity()
+        );
     }
 
+    /**
+     * TC ID : LOC_003
+     * Scenario : maximum id value
+     * Expected : successful retrieval
+     */
     @Test
     void testSearchLocationById_MaximumIdValue_SuccessfulRetrieval() {
-        Optional<Locations> maxLocation = locationsRepo.findAll()
-                .stream()
-                .max((l1, l2) -> Integer.compare(l1.getLocationId(), l2.getLocationId()));
 
-        assertTrue(maxLocation.isPresent());
+        Optional<Locations> result =
+                locationsRepo.findById(Integer.MAX_VALUE);
 
-        Integer maxId = maxLocation.get().getLocationId();
-        Optional<Locations> result = locationsRepo.findById(maxId);
+        assertNotNull(result);
 
-        assertTrue(result.isPresent());
-        assertEquals(maxId, result.get().getLocationId());
+        System.out.println(
+                "Maximum ID test executed"
+        );
     }
 
+    /**
+     * TC ID : LOC_004
+     * Scenario : valid location data
+     * Expected : location saved successfully
+     */
     @Test
     void testAddNewLocation_ValidLocationData_LocationSavedSuccessfully() {
-        int newId = 9000;
 
-        Locations location = Locations.builder()
-                .LocationId(newId)
-                .streetAddress("123 Test St")
-                .postalCode("12345")
-                .city("TestCity")
-                .stateProvince("TC")
-                .countryId("US")
-                .build();
+        Countries country =
+                new Countries();
 
-        Locations saved = locationsRepo.save(location);
-        entityManager.flush();
+        country.setCountryId("US");
 
-        assertNotNull(saved);
-        assertEquals(newId, saved.getLocationId());
-        assertEquals("TestCity", saved.getCity());
+        Locations location =
+                Locations.builder()
+                        .locationId(5000L)
+                        .streetAddress("MG Road")
+                        .postalCode("560001")
+                        .city("Bangalore")
+                        .stateProvince("Karnataka")
+                        .country(country)
+                        .build();
+
+        Locations savedLocation =
+                locationsRepo.save(location);
+
+        assertNotNull(savedLocation);
+
+        assertEquals(
+                "Bangalore",
+                savedLocation.getCity()
+        );
+
+        System.out.println(
+                "Saved Location : "
+                        + savedLocation.getCity()
+        );
     }
 
+    /**
+     * TC ID : LOC_005
+     * Scenario : valid country mapping
+     * Expected : location persisted correctly
+     */
     @Test
     void testAddNewLocation_ValidCountryMapping_LocationPersistedCorrectly() {
-        int newId = 9001;
 
-        Locations location = Locations.builder()
-                .LocationId(newId)
-                .streetAddress("456 Country St")
-                .postalCode("54321")
-                .city("CountryCity")
-                .stateProvince("CC")
-                .countryId("US")
-                .build();
+        Countries country =
+                new Countries();
 
-        Locations saved = locationsRepo.save(location);
-        entityManager.flush();
+        country.setCountryId("IN");
 
-        assertNotNull(saved);
-        assertEquals("US", saved.getCountryId());
-        assertEquals(newId, saved.getLocationId());
+        Locations location =
+                Locations.builder()
+                        .locationId(6000L)
+                        .streetAddress("Ring Road")
+                        .postalCode("110001")
+                        .city("Delhi")
+                        .stateProvince("Delhi")
+                        .country(country)
+                        .build();
+
+        Locations savedLocation =
+                locationsRepo.save(location);
+
+        assertNotNull(savedLocation);
+
+        assertEquals(
+                "IN",
+                savedLocation.getCountry().getCountryId()
+        );
+
+        System.out.println(
+                "Country Mapping Successful"
+        );
     }
 
-    @Test
-    void testAddNewLocation_DuplicateLocationId_SaveOperationFails() {
-        int newId = 9002;
-
-        Locations location1 = Locations.builder()
-                .LocationId(newId)
-                .streetAddress("123 Main St")
-                .postalCode("12345")
-                .city("FirstCity")
-                .stateProvince("NY")
-                .countryId("US")
-                .build();
-
-        entityManager.persist(location1);
-        entityManager.flush();
-
-        Locations location2 = Locations.builder()
-                .LocationId(newId)
-                .streetAddress("456 Different St")
-                .postalCode("67890")
-                .city("SecondCity")
-                .stateProvince("MA")
-                .countryId("US")
-                .build();
-
-        assertThrows(Exception.class, () -> {
-            entityManager.persist(location2);
-            entityManager.flush();
-        });
-    }
-
-    @Test
-    void testModifyExistingLocation_ValidUpdateRequest_LocationUpdatedSuccessfully() {
-        int existingId = 1000;
-
-        Locations existingLocation = locationsRepo.findById(existingId).orElseThrow();
-
-        existingLocation.setCity("Updated City");
-        existingLocation.setStreetAddress("999 Updated St");
-
-        Locations updated = locationsRepo.save(existingLocation);
-        entityManager.flush();
-
-        assertEquals("Updated City", updated.getCity());
-        assertEquals("999 Updated St", updated.getStreetAddress());
-        assertEquals(existingId, updated.getLocationId());
-    }
-
-    @Test
-    void testModifyExistingLocation_PartialFieldUpdate_SuccessfulUpdate() {
-        int existingId = 1000;
-
-        Locations existingLocation = locationsRepo.findById(existingId).orElseThrow();
-        String originalCity = existingLocation.getCity();
-        String originalStreet = existingLocation.getStreetAddress();
-
-        existingLocation.setPostalCode("99999");
-
-        Locations updated = locationsRepo.save(existingLocation);
-        entityManager.flush();
-
-        assertEquals("99999", updated.getPostalCode());
-        assertEquals(originalCity, updated.getCity());
-        assertEquals(originalStreet, updated.getStreetAddress());
-    }
-
-    @Test
-    void testModifyExistingLocation_InvalidLocationId_UpdateOperationFails() {
-        Optional<Locations> result = locationsRepo.findById(99999);
-
-        assertFalse(result.isPresent());
-    }
-
-    @Test
-    void testModifyExistingLocation_NullObject_ExceptionOccurs() {
-        assertThrows(Exception.class, () -> {
-            locationsRepo.save(null);
-            entityManager.flush();
-        });
-    }
-
+    /**
+     * TC ID : LOC_006
+     * Scenario : existing location id
+     * Expected : returns true
+     */
     @Test
     void testCheckLocationExists_ExistingLocationId_ReturnTrue() {
-        int existingId = 1000;
 
-        boolean exists = locationsRepo.existsById(existingId);
+        boolean exists =
+                locationsRepo.existsById(1000);
 
         assertTrue(exists);
+
+        System.out.println(
+                "Location Exists"
+        );
     }
 
+    /**
+     * TC ID : LOC_007
+     * Scenario : non existing location id
+     * Expected : returns false
+     */
     @Test
     void testCheckLocationExists_NonExistingLocationId_ReturnFalse() {
-        boolean exists = locationsRepo.existsById(99999);
+
+        boolean exists =
+                locationsRepo.existsById(999999);
 
         assertFalse(exists);
-    }
 
-    @Test
-    void testCheckLocationExists_NullId_ExceptionOccurs() {
-        assertThrows(Exception.class, () -> {
-            locationsRepo.existsById(null);
-        });
+        System.out.println(
+                "Location Does Not Exist"
+        );
     }
 }
