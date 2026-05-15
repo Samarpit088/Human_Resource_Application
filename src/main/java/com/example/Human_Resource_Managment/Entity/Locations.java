@@ -1,9 +1,8 @@
 package com.example.Human_Resource_Managment.Entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 
 @Entity
@@ -16,20 +15,26 @@ public class Locations {
 
     @Id
     @Column(name = "location_id")
-    private Integer LocationId;
+    private Long locationId;
 
-    @Column(name = "street_adress", length = 60)
+    @Column(name = "street_address", length = 40)
+    @Size(max = 40, message = "Street address cannot exceed 40 characters")
     private String streetAddress;
 
     @Column(name = "postal_code", length = 12)
+    @Size(max = 12, message = "Postal code cannot exceed 12 characters")
     private String postalCode;
 
-    @Column(name = "city", length = 30, nullable = false)
+    @Column(name = "city", nullable = false, length = 30)
+    @NotBlank(message = "City cannot be blank")
+    @Size(max = 30, message = "City cannot exceed 30 characters")
     private String city;
 
     @Column(name = "state_province", length = 25)
+    @Size(max = 25, message = "State province cannot exceed 25 characters")
     private String stateProvince;
 
-    @Column(name = "country_id", length = 4)
-    private String countryId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "country_id")
+    private Countries country;
 }
