@@ -10,6 +10,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 
 
+import java.math.BigDecimal;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -32,10 +33,10 @@ class JobRepoTest {
         System.out.println("Total Jobs = " + jobs.getTotalElements());
 
         jobs.forEach(job -> {
-            System.out.println("Job ID: " + job.getJob_id());
-            System.out.println("Job Title: " + job.getJob_title());
-            System.out.println("Min Salary: " + job.getMin_salary());
-            System.out.println("Max Salary: " + job.getMax_salary());
+            System.out.println("Job ID: " + job.getJobId());
+            System.out.println("Job Title: " + job.getJobTitle());
+            System.out.println("Min Salary: " + job.getMinSalary());
+            System.out.println("Max Salary: " + job.getMaxSalary());
             System.out.println("------------------------");
         });
 
@@ -45,10 +46,10 @@ class JobRepoTest {
     void testAddJobWithNullJobId() {
 
         Job job = new Job();
-        job.setJob_id(null);
-        job.setJob_title("Test Job");
-        job.setMin_salary(1000);
-        job.setMax_salary(5000);
+        job.setJobId(null);
+        job.setJobTitle("Test Job");
+        job.setMinSalary(new BigDecimal(1000));
+        job.setMaxSalary(new BigDecimal(5000));
 
         assertThrows(Exception.class, () -> {
             jobRepo.saveAndFlush(job);
@@ -58,10 +59,10 @@ class JobRepoTest {
     void testAddDuplicateJobId() {
 
         Job job1 = new Job();
-        job1.setJob_id("DUP_JOB");
-        job1.setJob_title("Duplicate Job One");
-        job1.setMin_salary(1000);
-        job1.setMax_salary(5000);
+        job1.setJobId("DUP_JOB");
+        job1.setJobTitle("Duplicate Job One");
+        job1.setMinSalary(new BigDecimal(1000));
+        job1.setMaxSalary(new BigDecimal(5000));
 
         jobRepo.saveAndFlush(job1);
 
@@ -79,10 +80,10 @@ class JobRepoTest {
     void testAddJobWithMissingJobTitle() {
 
         Job job = new Job();
-        job.setJob_id("NO_TITLE");
-        job.setJob_title(null);
-        job.setMin_salary(1000);
-        job.setMax_salary(5000);
+        job.setJobId("NO_TITLE");
+        job.setJobTitle(null);
+        job.setMinSalary(new BigDecimal(1000));
+        job.setMaxSalary(new BigDecimal(5000));
 
         assertThrows(Exception.class, () -> {
             jobRepo.saveAndFlush(job);
@@ -92,10 +93,10 @@ class JobRepoTest {
     void testAddJobWithNegativeSalary() {
 
         Job job = new Job();
-        job.setJob_id("NEG_SAL");
-        job.setJob_title("Negative Salary Job");
-        job.setMin_salary(-1000);
-        job.setMax_salary(5000);
+        job.setJobId("NEG_SAL");
+        job.setJobTitle("Negative Salary Job");
+        job.setMinSalary(new BigDecimal(-1000));
+        job.setMaxSalary(new BigDecimal(5000));
 
         assertThrows(Exception.class, () -> {
             jobRepo.saveAndFlush(job);
@@ -109,13 +110,13 @@ class JobRepoTest {
         assertTrue(optionalJob.isPresent());
 
         Job job = optionalJob.get();
-        job.setJob_title("Updated Programmer");
+        job.setJobTitle("Updated Programmer");
 
         Job updatedJob = jobRepo.save(job);
 
-        System.out.println("Updated Title = " + updatedJob.getJob_title());
+        System.out.println("Updated Title = " + updatedJob.getJobTitle());
 
-        assertEquals("Updated Programmer", updatedJob.getJob_title());
+        assertEquals("Updated Programmer", updatedJob.getJobTitle());
     }
     @Test
     void testUpdateMinSalaryAndMaxSalary() {
@@ -125,16 +126,16 @@ class JobRepoTest {
         assertTrue(optionalJob.isPresent());
 
         Job job = optionalJob.get();
-        job.setMin_salary(5000);
-        job.setMax_salary(15000);
+        job.setMinSalary(new BigDecimal(5000));
+        job.setMaxSalary(new BigDecimal(15000));
 
         Job updatedJob = jobRepo.save(job);
 
-        System.out.println("Updated Min Salary = " + updatedJob.getMin_salary());
-        System.out.println("Updated Max Salary = " + updatedJob.getMax_salary());
+        System.out.println("Updated Min Salary = " + updatedJob.getMinSalary());
+        System.out.println("Updated Max Salary = " + updatedJob.getMaxSalary());
 
-        assertEquals(5000, updatedJob.getMin_salary());
-        assertEquals(15000, updatedJob.getMax_salary());
+        assertEquals(new BigDecimal(5000), updatedJob.getMinSalary());
+        assertEquals(new BigDecimal(15000), updatedJob.getMaxSalary());
     }
     @Test
     void testUpdateInvalidJobId() {
@@ -153,7 +154,7 @@ class JobRepoTest {
         assertTrue(optionalJob.isPresent());
 
         Job job = optionalJob.get();
-        job.setMin_salary(-5000);
+        job.setMinSalary(new BigDecimal(-5000));
 
         assertThrows(Exception.class, () -> {
             jobRepo.saveAndFlush(job);
@@ -167,7 +168,7 @@ class JobRepoTest {
         assertTrue(optionalJob.isPresent());
 
         Job job = optionalJob.get();
-        job.setJob_title("");
+        job.setJobTitle("");
 
         assertThrows(Exception.class, () -> {
             jobRepo.saveAndFlush(job);
