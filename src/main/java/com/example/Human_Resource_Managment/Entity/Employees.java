@@ -36,7 +36,7 @@ public class Employees {
 
     @Column(nullable = false, unique = true, length = 25)
     @NotBlank(message = "Email is required")
-    @Email(message = "Invalid email format")
+//    @Email(message = "Invalid email format")
     @Size(max = 25,
             message = "Email cannot exceed 25 characters")
     private String email;

@@ -8,20 +8,36 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.math.BigDecimal;
 import java.util.Optional;
 
-public interface EmployeeRepo extends JpaRepository<Employees, Integer> {
+public interface EmployeeRepo
+        extends JpaRepository<Employees, Integer> {
+
     Optional<Employees> findByEmail(String email);
 
     boolean existsByEmail(String email);
 
-    Page<Employees> findByDepartmentId(
-            Integer departmentId,
+    // =====================================================
+    // DEPARTMENT
+    // employee.department.departmentId
+    // =====================================================
+
+    Page<Employees> findByDepartmentDepartmentId(
+            Long departmentId,
             Pageable pageable
     );
 
-    Page<Employees> findByJobId(
+    // =====================================================
+    // JOB
+    // employee.job.jobId
+    // =====================================================
+
+    Page<Employees> findByJobJobId(
             String jobId,
             Pageable pageable
     );
+
+    // =====================================================
+    // SALARY
+    // =====================================================
 
     Page<Employees> findBySalaryBetween(
             BigDecimal minSalary,
@@ -29,8 +45,44 @@ public interface EmployeeRepo extends JpaRepository<Employees, Integer> {
             Pageable pageable
     );
 
+    // =====================================================
+    // FIRST NAME SEARCH
+    // =====================================================
+
     Page<Employees> findByFirstNameContainingIgnoreCase(
             String firstName,
+            Pageable pageable
+    );
+
+    // =====================================================
+    // MANAGER
+    // employee.manager.employeeId
+    // =====================================================
+
+    Page<Employees> findByManagerEmployeeId(
+            Long managerId,
+            Pageable pageable
+    );
+
+    // =====================================================
+    // REGION
+    // employee.department.location.country.region.regionId
+    // =====================================================
+
+    Page<Employees>
+    findByDepartmentLocationCountryRegionRegionId(
+            Long regionId,
+            Pageable pageable
+    );
+
+    // =====================================================
+    // COUNTRY NAME
+    // employee.department.location.country.countryName
+    // =====================================================
+
+    Page<Employees>
+    findByDepartmentLocationCountryCountryNameContainingIgnoreCase(
+            String countryName,
             Pageable pageable
     );
 }
