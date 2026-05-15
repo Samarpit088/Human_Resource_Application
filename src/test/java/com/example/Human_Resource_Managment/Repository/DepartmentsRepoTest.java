@@ -83,4 +83,58 @@ class DepartmentRepoTest {
             System.out.println("No departments found");
         }
     }
+
+    @Test
+    void testAddDepartment_WhenValidDepartmentProvided_DepartmentAddedSuccessfully() {
+
+        Department department = new Department();
+
+        department.setDepartmentId(500L);
+        department.setDepartmentName("Testing");
+        department.setManagerId(101L);
+        department.setLocationId(1000L);
+
+        Department savedDepartment =
+                departmentRepo.save(department);
+
+        assertNotNull(savedDepartment);
+
+        assertEquals(500L,
+                savedDepartment.getDepartmentId());
+
+        assertEquals("Testing",
+                savedDepartment.getDepartmentName());
+
+        System.out.println("Department Added Successfully");
+    }
+
+    @Test
+    void testSaveDepartment_WhenDepartmentIdExists_UpdateDepartment() {
+
+        Department department1 = new Department();
+
+        department1.setDepartmentId(600L);
+        department1.setDepartmentName("HR");
+        department1.setManagerId(101L);
+        department1.setLocationId(1000L);
+
+        departmentRepo.save(department1);
+
+        Department department2 = new Department();
+
+        department2.setDepartmentId(600L);
+        department2.setDepartmentName("IT");
+        department2.setManagerId(102L);
+        department2.setLocationId(2000L);
+
+        Department updatedDepartment =
+                departmentRepo.save(department2);
+
+        assertNotNull(updatedDepartment);
+
+        assertEquals("IT",
+                updatedDepartment.getDepartmentName());
+
+        System.out.println("Existing Department Updated");
+    }
 }

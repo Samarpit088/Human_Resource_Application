@@ -10,6 +10,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.TestPropertySource;
 
+import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 @DataJpaTest
@@ -48,5 +50,27 @@ class CountriesRepoTest {
 
         // Optional check
         assertFalse(countries.isEmpty());
+    }
+    @Test
+    void testFindCountryById() {
+
+        Optional<Countries> country =
+                countriesRepo.findById("IN");
+
+        assertTrue(country.isPresent());
+
+        System.out.println("Country Found = "
+                + country.get().getCountryName());
+    }
+
+    @Test
+    void testExistsById() {
+
+        boolean exists =
+                countriesRepo.existsById("IN");
+
+        assertTrue(exists);
+
+        System.out.println("Country Exists");
     }
 }
