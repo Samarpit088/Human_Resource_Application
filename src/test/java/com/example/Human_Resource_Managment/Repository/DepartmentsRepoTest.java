@@ -1,6 +1,9 @@
 package com.example.Human_Resource_Managment.Repository;
 
 import com.example.Human_Resource_Managment.Entity.Department;
+import com.example.Human_Resource_Managment.Entity.Employees;
+import com.example.Human_Resource_Managment.Entity.Locations;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -10,7 +13,11 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.TestPropertySource;
+
+import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -21,120 +28,203 @@ class DepartmentsRepoTest {
 
     @Autowired
     private DepartmentRepo departmentRepo;
+    @Autowired
+    private EmployeeRepo employeeRepo;
 
     /**
      * TC ID : DEP_001
      * Scenario : departments exist
      * Expected : department list returned
      */
+    // =========================================================
+// findByManagerEmployeeId()
+// =========================================================
+
     @Test
-    void testFindAllDepartments_WhenDepartmentsExist_ReturnDepartmentList() {
+    @DisplayName("REPO_FINDMANAGER_001")
+    void testFindByManagerEmployeeId_Valid() {
 
-        // Fetch first page with 5 records
-        Page<Department> departments =
-                departmentRepo.findAll(PageRequest.of(0, 5));
+        Pageable pageable =
+                PageRequest.of(0,5);
 
-        // Assertions
-        assertNotNull(departments);
+        Page<Employees> employees =
+                employeeRepo.findByManagerEmployeeId(
+                        103L,
+                        pageable
+                );
 
-        // Print total departments count
-        System.out.println("Total Departments = "
-                + departments.getTotalElements());
+        assertNotNull(employees);
 
-        // Print fetched departments
-        departments.forEach(department -> {
+        assertFalse(employees.isEmpty());
 
-            System.out.println("Department ID: "
-                    + department.getDepartmentId());
+        employees.forEach(employee ->
 
-            System.out.println("Department Name: "
-                    + department.getDepartmentName());
-
-            System.out.println("Manager ID: "
-                    + department.getManagerId());
-
-            System.out.println("Location ID: "
-                    + department.getLocationId());
-
-            System.out.println("------------------------");
-        });
-
-        // Verify departments exist
-        assertFalse(departments.isEmpty());
-    }
-
-    /**
-     * TC ID : DEP_003
-     * Scenario : no departments in database
-     * Expected : empty list returned
-     */
-    @Test
-    void testFindAllDepartments_WhenNoDepartmentsExist_ReturnEmptyList() {
-
-        Page<Department> departments =
-                departmentRepo.findAll(PageRequest.of(0, 5));
-
-        assertNotNull(departments);
-
-        if (departments.getTotalElements() == 0) {
-
-            assertTrue(departments.isEmpty());
-
-            System.out.println("No departments found");
-        }
+                System.out.println(
+                        employee.getFirstName()
+                                + " -> Manager : "
+                                + employee.getManager()
+                                .getEmployeeId()
+                )
+        );
     }
 
     @Test
-    void testAddDepartment_WhenValidDepartmentProvided_DepartmentAddedSuccessfully() {
+    @DisplayName("REPO_FINDMANAGER_002")
+    void testFindByManagerEmployeeId_Invalid() {
 
-        Department department = new Department();
+        Pageable pageable =
+                PageRequest.of(0,5);
 
-        department.setDepartmentId(500L);
-        department.setDepartmentName("Testing");
-        department.setManagerId(101L);
-        department.setLocationId(1000L);
+        Page<Employees> employees =
+                employeeRepo.findByManagerEmployeeId(
+                        99999L,
+                        pageable
+                );
+
+        assertNotNull(employees);
+
+        assertTrue(employees.isEmpty());
+
+        System.out.println(
+                "No employees found under this manager"
+        );
+    }
+
+    // =========================================================
+// getManager()
+// =========================================================
+
+    @Test
+    @DisplayName("REPO_GETMANAGER_001")
+    void testGetManager_Invalid() {
+
+        Optional<Employees> employee =
+                employeeRepo.findById(99999);
+
+        assertFalse(employee.isPresent());
+
+        System.out.println(
+                "Employee not found, manager cannot be fetched"
+        );
+    }
+
+
+    // =========================================================
+// save()
+// =========================================================
+
+    @Test
+    @DisplayName("REPO_SAVEDEPT_001")
+    void testSaveDepartment() {
+
+        Department department =
+                new Department();
+
+        department.setDepartmentId(999L);
+
+        department.setDepartmentName(
+                "Artificial Intelligence"
+        );
+
+        // =========================
+        // MANAGER
+        // =========================
+
+        Employees manager =
+                new Employees();
+
+        manager.setEmployeeId(103L);
+
+        department.setManager(manager);
+
+        // =========================
+        // LOCATION
+        // =========================
+
+        Locations location =
+                new Locations();
+
+        location.setLocationId(1700L);
+
+        department.setLocation(location);
 
         Department savedDepartment =
-                departmentRepo.save(department);
+                departmentRepo.save(
+                        department
+                );
 
         assertNotNull(savedDepartment);
 
-        assertEquals(500L,
-                savedDepartment.getDepartmentId());
+        assertEquals(
+                "Artificial Intelligence",
+                savedDepartment.getDepartmentName()
+        );
 
-        assertEquals("Testing",
-                savedDepartment.getDepartmentName());
+        assertEquals(
+                103L,
+                savedDepartment.getManager()
+                        .getEmployeeId()
+        );
 
-        System.out.println("Department Added Successfully");
+        assertEquals(
+                1700L,
+                savedDepartment.getLocation()
+                        .getLocationId()
+        );
+
+        System.out.println(
+                "Department saved successfully"
+        );
     }
 
+    // =========================================================
+// update()
+// =========================================================
+
     @Test
-    void testSaveDepartment_WhenDepartmentIdExists_UpdateDepartment() {
+    @DisplayName("REPO_UPDATEDEPT_001")
+    void testUpdateDepartment() {
 
-        Department department1 = new Department();
+        Optional<Department> optionalDepartment =
+                departmentRepo.findById(60L);
 
-        department1.setDepartmentId(600L);
-        department1.setDepartmentName("HR");
-        department1.setManagerId(101L);
-        department1.setLocationId(1000L);
+        assertTrue(optionalDepartment.isPresent());
 
-        departmentRepo.save(department1);
+        Department department =
+                optionalDepartment.get();
 
-        Department department2 = new Department();
-
-        department2.setDepartmentId(600L);
-        department2.setDepartmentName("IT");
-        department2.setManagerId(102L);
-        department2.setLocationId(2000L);
+        department.setDepartmentName(
+                "Updated IT Department"
+        );
 
         Department updatedDepartment =
-                departmentRepo.save(department2);
+                departmentRepo.save(
+                        department
+                );
 
         assertNotNull(updatedDepartment);
 
-        assertEquals("IT",
-                updatedDepartment.getDepartmentName());
+        assertEquals(
+                "Updated IT Department",
+                updatedDepartment.getDepartmentName()
+        );
 
-        System.out.println("Existing Department Updated");
+        System.out.println(
+                "Department updated successfully"
+        );
+    }
+
+    @Test
+    @DisplayName("REPO_UPDATEDEPT_002")
+    void testUpdateDepartment_Invalid() {
+
+        Optional<Department> optionalDepartment =
+                departmentRepo.findById(99999L);
+
+        assertFalse(optionalDepartment.isPresent());
+
+        System.out.println(
+                "Department not found"
+        );
     }
 }

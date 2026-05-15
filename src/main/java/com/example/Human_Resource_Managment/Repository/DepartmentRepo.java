@@ -6,8 +6,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 
-@RepositoryRestResource(collectionResourceRel = "departments", path = "departments")
-public interface DepartmentRepo extends JpaRepository<Department,Long> {
+import java.util.List;
 
-    Page<Department>findAll(Pageable pageable);
+
+
+public interface DepartmentRepo
+        extends JpaRepository<Department, Long> {
+    List<Department> findByLocationLocationId(Long locationId);
+
 }
