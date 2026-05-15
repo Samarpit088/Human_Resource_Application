@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 
-class DepartmentRepoTest {
+class DepartmentsRepoTest {
 
     @Autowired
     private DepartmentRepo departmentRepo;

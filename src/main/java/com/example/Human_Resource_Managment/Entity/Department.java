@@ -26,9 +26,9 @@ public class Department {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "manager_id")
-    private Employee manager;
+    private Employees manager;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "location_id")
-    private Location location;
+    private Locations location;
 }
