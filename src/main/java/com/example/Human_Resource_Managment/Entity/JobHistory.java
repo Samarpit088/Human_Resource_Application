@@ -1,8 +1,7 @@
 package com.example.Human_Resource_Managment.Entity;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDate;
 
@@ -10,6 +9,8 @@ import java.time.LocalDate;
 @Table(name = "job_history")
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class JobHistory {
 
     @EmbeddedId
