@@ -1,34 +1,34 @@
 package com.example.Human_Resource_Managment.Entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.PositiveOrZero;
-import jakarta.validation.constraints.Size;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
 @Table(name = "departments")
-@Data
+@Getter
+@Setter
 public class Department {
 
     @Id
-    @PositiveOrZero(message = "Department ID must be zero or greater")
     @Column(name = "department_id", precision = 4, scale = 0)
+    @NotNull(message = "Department id is required")
+    @Min(value = 1, message = "Department id must be positive")
+    @Max(value = 9999, message = "Department id cannot exceed 4 digits")
     private Long departmentId;
 
-    @NotBlank(message = "Department name cannot be empty")
-    @Size(max = 30)
     @Column(name = "department_name", nullable = false, length = 30)
+    @NotBlank(message = "Department name is required")
+    @Size(max = 30, message = "Department name cannot exceed 30 characters")
     private String departmentName;
 
-    @PositiveOrZero(message = "Manager ID must be zero or greater")
-    @Column(name = "manager_id", precision = 6, scale = 0)
-    private Long managerId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "manager_id")
+    private Employee manager;
 
-    @PositiveOrZero(message = "Location ID must be zero or greater")
-    @Column(name = "location_id", precision = 4, scale = 0)
-    private Long locationId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "location_id")
+    private Location location;
 }
