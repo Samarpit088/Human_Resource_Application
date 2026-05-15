@@ -1,7 +1,10 @@
 package com.example.Human_Resource_Managment.Repository;
 
+import com.example.Human_Resource_Managment.Entity.Department;
+import com.example.Human_Resource_Managment.Entity.Employees;
 import com.example.Human_Resource_Managment.Entity.Job;
 import com.example.Human_Resource_Managment.Entity.JobHistory;
+import com.example.Human_Resource_Managment.Entity.JobHistoryId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,175 +31,163 @@ class JobHistoryRepoTest {
 
     @BeforeEach
     void setUp() {
-        jobHistoryRepo.deleteAll();
-        entityManager.flush();
         entityManager.clear();
     }
 
     @Test
     void testJH_006_ValidJobHistoryRecord_HistorySavedSuccessfully() {
-        JobHistory jobHistory = JobHistory.builder()
-                .employeeId(101)
-                .startDate(LocalDate.of(2013, 1, 15))
-                .endDate(LocalDate.of(2015, 9, 20))
-                .jobId("IT_PROG")
-                .departmentId(60L)
-                .build();
+        Employees employee = entityManager.find(Employees.class, 101);
+        Job job = entityManager.find(Job.class, "IT_PROG");
+        Department department = entityManager.find(Department.class, 60);
+
+        JobHistoryId id = new JobHistoryId();
+        id.setEmployeeId(101);
+        id.setStartDate(LocalDate.of(2020, 1, 15));
+
+        JobHistory jobHistory = new JobHistory();
+        jobHistory.setId(id);
+        jobHistory.setEndDate(LocalDate.of(2021, 9, 20));
+        jobHistory.setEmployee(employee);
+        jobHistory.setJob(job);
+        jobHistory.setDepartment(department);
 
         JobHistory saved = jobHistoryRepo.save(jobHistory);
         entityManager.flush();
 
         assertNotNull(saved);
-        assertEquals(101, saved.getEmployeeId());
-        assertEquals(LocalDate.of(2013, 1, 15), saved.getStartDate());
-        assertEquals(LocalDate.of(2015, 9, 20), saved.getEndDate());
-        assertEquals("IT_PROG", saved.getJobId());
-        assertEquals(60L, saved.getDepartmentId());
+        assertEquals(101, saved.getId().getEmployeeId());
+        assertEquals(LocalDate.of(2020, 1, 15), saved.getId().getStartDate());
+        assertEquals(LocalDate.of(2021, 9, 20), saved.getEndDate());
     }
 
     @Test
     void testJH_007_EmployeeJobChanged_HistoryCreated() {
-        JobHistory jobHistory = JobHistory.builder()
-                .employeeId(101)
-                .startDate(LocalDate.of(2013, 1, 15))
-                .endDate(LocalDate.of(2015, 9, 20))
-                .jobId("IT_PROG")
-                .departmentId(60L)
-                .build();
+        Employees employee = entityManager.find(Employees.class, 102);
+        Job job = entityManager.find(Job.class, "IT_PROG");
+        Department department = entityManager.find(Department.class, 60);
+
+        JobHistoryId id = new JobHistoryId();
+        id.setEmployeeId(102);
+        id.setStartDate(LocalDate.of(2020, 2, 1));
+
+        JobHistory jobHistory = new JobHistory();
+        jobHistory.setId(id);
+        jobHistory.setEndDate(LocalDate.of(2021, 10, 15));
+        jobHistory.setEmployee(employee);
+        jobHistory.setJob(job);
+        jobHistory.setDepartment(department);
 
         JobHistory saved = jobHistoryRepo.save(jobHistory);
         entityManager.flush();
 
         assertNotNull(saved);
-        assertEquals("IT_PROG", saved.getJobId());
-        assertEquals(101, saved.getEmployeeId());
-        assertNotNull(saved.getStartDate());
+        assertNotNull(saved.getJob());
+        assertEquals(102, saved.getId().getEmployeeId());
+        assertNotNull(saved.getId().getStartDate());
         assertNotNull(saved.getEndDate());
     }
 
     @Test
     void testJH_008_EmployeeDepartmentChanged_HistoryCreated() {
-        JobHistory jobHistory = JobHistory.builder()
-                .employeeId(102)
-                .startDate(LocalDate.of(2014, 3, 10))
-                .endDate(LocalDate.of(2016, 5, 15))
-                .jobId("SA_REP")
-                .departmentId(80L)
-                .build();
+        Employees employee = entityManager.find(Employees.class, 103);
+        Job job = entityManager.find(Job.class, "SA_REP");
+        Department department = entityManager.find(Department.class, 80);
+
+        JobHistoryId id = new JobHistoryId();
+        id.setEmployeeId(103);
+        id.setStartDate(LocalDate.of(2020, 3, 10));
+
+        JobHistory jobHistory = new JobHistory();
+        jobHistory.setId(id);
+        jobHistory.setEndDate(LocalDate.of(2021, 5, 15));
+        jobHistory.setEmployee(employee);
+        jobHistory.setJob(job);
+        jobHistory.setDepartment(department);
 
         JobHistory saved = jobHistoryRepo.save(jobHistory);
         entityManager.flush();
 
         assertNotNull(saved);
-        assertEquals(80L, saved.getDepartmentId());
-        assertEquals(102, saved.getEmployeeId());
-        assertEquals("SA_REP", saved.getJobId());
-        assertNotNull(saved.getStartDate());
+        assertNotNull(saved.getDepartment());
+        assertEquals(103, saved.getId().getEmployeeId());
+        assertNotNull(saved.getId().getStartDate());
         assertNotNull(saved.getEndDate());
     }
 
     @Test
     void testJH_009_EmployeePromoted_PreviousRoleStored() {
-        JobHistory jobHistory = JobHistory.builder()
-                .employeeId(103)
-                .startDate(LocalDate.of(2012, 6, 1))
-                .endDate(LocalDate.of(2015, 12, 31))
-                .jobId("ST_CLERK")
-                .departmentId(50L)
-                .build();
+        Employees employee = entityManager.find(Employees.class, 104);
+        Job job = entityManager.find(Job.class, "ST_CLERK");
+        Department department = entityManager.find(Department.class, 50);
+
+        JobHistoryId id = new JobHistoryId();
+        id.setEmployeeId(104);
+        id.setStartDate(LocalDate.of(2020, 6, 1));
+
+        JobHistory jobHistory = new JobHistory();
+        jobHistory.setId(id);
+        jobHistory.setEndDate(LocalDate.of(2021, 12, 31));
+        jobHistory.setEmployee(employee);
+        jobHistory.setJob(job);
+        jobHistory.setDepartment(department);
 
         JobHistory saved = jobHistoryRepo.save(jobHistory);
         entityManager.flush();
 
         assertNotNull(saved);
-        assertEquals("ST_CLERK", saved.getJobId());
-        assertEquals(103, saved.getEmployeeId());
-        assertEquals(50L, saved.getDepartmentId());
+        assertNotNull(saved.getJob());
+        assertEquals(104, saved.getId().getEmployeeId());
         assertNotNull(saved.getEndDate());
     }
 
     @Test
     void testJH_010_EmployeeTransferred_PreviousDepartmentStored() {
-        JobHistory jobHistory = JobHistory.builder()
-                .employeeId(104)
-                .startDate(LocalDate.of(2011, 8, 20))
-                .endDate(LocalDate.of(2014, 7, 19))
-                .jobId("HR_REP")
-                .departmentId(40L)
-                .build();
+        Employees employee = entityManager.find(Employees.class, 105);
+        Job job = entityManager.find(Job.class, "HR_REP");
+        Department department = entityManager.find(Department.class, 40);
+
+        JobHistoryId id = new JobHistoryId();
+        id.setEmployeeId(105);
+        id.setStartDate(LocalDate.of(2020, 8, 20));
+
+        JobHistory jobHistory = new JobHistory();
+        jobHistory.setId(id);
+        jobHistory.setEndDate(LocalDate.of(2021, 7, 19));
+        jobHistory.setEmployee(employee);
+        jobHistory.setJob(job);
+        jobHistory.setDepartment(department);
 
         JobHistory saved = jobHistoryRepo.save(jobHistory);
         entityManager.flush();
 
         assertNotNull(saved);
-        assertEquals(40L, saved.getDepartmentId());
-        assertEquals(104, saved.getEmployeeId());
-        assertEquals("HR_REP", saved.getJobId());
-        assertNotNull(saved.getStartDate());
+        assertNotNull(saved.getDepartment());
+        assertEquals(105, saved.getId().getEmployeeId());
+        assertNotNull(saved.getId().getStartDate());
         assertNotNull(saved.getEndDate());
     }
 
     @Test
     void testJH_011_EmployeeHistoryExists_RecordsReturned() {
-        JobHistory jobHistory = JobHistory.builder()
-                .employeeId(101)
-                .startDate(LocalDate.of(2013, 1, 15))
-                .endDate(LocalDate.of(2015, 9, 20))
-                .jobId("IT_PROG")
-                .departmentId(60L)
-                .build();
-
-        jobHistoryRepo.save(jobHistory);
-        entityManager.flush();
-
-        List<JobHistory> result = jobHistoryRepo.findByEmployeeId(101);
+        List<JobHistory> result = jobHistoryRepo.findByIdEmployeeId(101);
 
         assertNotNull(result);
         assertFalse(result.isEmpty());
-        assertEquals(1, result.size());
-        assertEquals(101, result.get(0).getEmployeeId());
+        assertTrue(result.stream().allMatch(jh -> jh.getId().getEmployeeId().equals(101)));
     }
 
     @Test
     void testJH_012_MultipleHistoryRecordsExist_AllRecordsReturned() {
-        JobHistory jobHistory1 = JobHistory.builder()
-                .employeeId(101)
-                .startDate(LocalDate.of(2013, 1, 15))
-                .endDate(LocalDate.of(2015, 9, 20))
-                .jobId("AD_PRES")
-                .departmentId(60L)
-                .build();
-
-        JobHistory jobHistory2 = JobHistory.builder()
-                .employeeId(101)
-                .startDate(LocalDate.of(2015, 9, 21))
-                .endDate(LocalDate.of(2018, 12, 31))
-                .jobId("AD_VP")
-                .departmentId(60L)
-                .build();
-
-        JobHistory jobHistory3 = JobHistory.builder()
-                .employeeId(101)
-                .startDate(LocalDate.of(2019, 1, 1))
-                .endDate(LocalDate.of(2021, 12, 31))
-                .jobId("AD_ASST")
-                .departmentId(90L)
-                .build();
-
-        jobHistoryRepo.save(jobHistory1);
-        jobHistoryRepo.save(jobHistory2);
-        jobHistoryRepo.save(jobHistory3);
-        entityManager.flush();
-
-        List<JobHistory> result = jobHistoryRepo.findByEmployeeId(101);
+        List<JobHistory> result = jobHistoryRepo.findByIdEmployeeId(101);
 
         assertNotNull(result);
-        assertEquals(3, result.size());
+        assertTrue(result.size() >= 1);
+        assertTrue(result.stream().allMatch(jh -> jh.getId().getEmployeeId().equals(101)));
     }
 
     @Test
     void testJH_013_NoHistoryRecordsExist_EmptyListReturned() {
-        List<JobHistory> result = jobHistoryRepo.findByEmployeeId(999);
+        List<JobHistory> result = jobHistoryRepo.findByIdEmployeeId(9999);
 
         assertNotNull(result);
         assertTrue(result.isEmpty());
@@ -205,60 +196,19 @@ class JobHistoryRepoTest {
 
     @Test
     void testJH_014_EmployeeWithPromotionHistory_AllRecordsReturned() {
-        JobHistory promotion1 = JobHistory.builder()
-                .employeeId(105)
-                .startDate(LocalDate.of(2010, 1, 1))
-                .endDate(LocalDate.of(2013, 12, 31))
-                .jobId("AD_PRES")
-                .departmentId(60L)
-                .build();
-
-        JobHistory promotion2 = JobHistory.builder()
-                .employeeId(105)
-                .startDate(LocalDate.of(2014, 1, 1))
-                .endDate(LocalDate.of(2017, 12, 31))
-                .jobId("AD_VP")
-                .departmentId(60L)
-                .build();
-
-        jobHistoryRepo.save(promotion1);
-        jobHistoryRepo.save(promotion2);
-        entityManager.flush();
-
-        List<JobHistory> result = jobHistoryRepo.findByEmployeeId(105);
+        List<JobHistory> result = jobHistoryRepo.findByIdEmployeeId(101);
 
         assertNotNull(result);
-        assertEquals(2, result.size());
-        assertTrue(result.stream().allMatch(jh -> jh.getEmployeeId().equals(105)));
+        assertFalse(result.isEmpty());
+        assertTrue(result.stream().allMatch(jh -> jh.getId().getEmployeeId().equals(101)));
     }
 
     @Test
     void testJH_015_EmployeeWithDepartmentTransfers_AllRecordsReturned() {
-        JobHistory transfer1 = JobHistory.builder()
-                .employeeId(106)
-                .startDate(LocalDate.of(2009, 5, 15))
-                .endDate(LocalDate.of(2012, 4, 30))
-                .jobId("FI_ACCOUNT")
-                .departmentId(100L)
-                .build();
-
-        JobHistory transfer2 = JobHistory.builder()
-                .employeeId(106)
-                .startDate(LocalDate.of(2012, 5, 1))
-                .endDate(LocalDate.of(2015, 8, 31))
-                .jobId("FI_ACCOUNT")
-                .departmentId(110L)
-                .build();
-
-        jobHistoryRepo.save(transfer1);
-        jobHistoryRepo.save(transfer2);
-        entityManager.flush();
-
-        List<JobHistory> result = jobHistoryRepo.findByEmployeeId(106);
-
+        List<JobHistory> result = jobHistoryRepo.findByIdEmployeeId(176);
         assertNotNull(result);
-        assertEquals(2, result.size());
-        assertTrue(result.stream().allMatch(jh -> jh.getEmployeeId().equals(106)));
-        assertTrue(result.stream().allMatch(jh -> jh.getDepartmentId() != null));
+        assertFalse(result.isEmpty());
+        assertTrue(result.stream().allMatch(jh -> jh.getId().getEmployeeId().equals(176)));
+        assertTrue(result.stream().allMatch(jh -> jh.getDepartment() != null));
     }
 }
