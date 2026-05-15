@@ -16,7 +16,7 @@ import java.time.LocalDate;
 public class JobHistoryId implements Serializable {
 
     @Column(name = "employee_id")
-    private Integer employeeId;
+    private Long employeeId;
 
     @Column(name = "start_date")
     private LocalDate startDate;
