@@ -1,9 +1,11 @@
 package com.example.Human_Resource_Managment.Repository;
 
 import com.example.Human_Resource_Managment.Entity.Countries;
+import com.example.Human_Resource_Managment.Entity.Department;
 import com.example.Human_Resource_Managment.Entity.Locations;
 
 import jakarta.persistence.EntityManager;
+import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,6 +35,9 @@ class LocationsRepoTest {
 
     @Autowired
     private EntityManager entityManager;
+
+    @Autowired
+    private DepartmentRepo departmentRepo;
 
     @BeforeEach
     void setUp() {
@@ -234,6 +239,48 @@ class LocationsRepoTest {
 
         System.out.println(
                 "Location Does Not Exist"
+        );
+    }
+
+    @Test
+    void testFindByLocationLocationId_InvalidLocationId_ReturnEmptyList() {
+
+        List<Department> departments =
+                departmentRepo.findByLocationLocationId(999999L);
+
+        assertNotNull(departments);
+
+        assertTrue(departments.isEmpty());
+
+        System.out.println(
+                "No Departments Found"
+        );
+    }
+
+    @Test
+    void testFindByLocationLocationId_NullLocationId_ReturnEmptyList() {
+
+        List<Department> departments =
+                departmentRepo.findByLocationLocationId(null);
+
+        assertNotNull(departments);
+
+        assertTrue(departments.isEmpty());
+
+        System.out.println(
+                "No Departments Found For Null Location ID"
+        );
+    }
+    @Test
+    void testFindByLocationLocationId_MaximumLocationId_MethodExecutesSuccessfully() {
+
+        List<Department> departments =
+                departmentRepo.findByLocationLocationId(Long.MAX_VALUE);
+
+        assertNotNull(departments);
+
+        System.out.println(
+                "Maximum ID Test Executed"
         );
     }
 }
