@@ -118,7 +118,7 @@ class EmployeeRepoTest {
     void testFindById_Valid() {
 
         Optional<Employees> employee =
-                employeeRepo.findById(100);
+                employeeRepo.findById(100L);
 
         assertTrue(employee.isPresent());
 
@@ -143,7 +143,7 @@ class EmployeeRepoTest {
     void testFindById_Invalid() {
 
         Optional<Employees> employee =
-                employeeRepo.findById(99999);
+                employeeRepo.findById(99999L);
 
         assertFalse(employee.isPresent());
     }
@@ -414,20 +414,14 @@ class EmployeeRepoTest {
         Long employeeId = 999L;
 
         boolean existsBeforeDelete =
-                employeeRepo.existsById(
-                        Math.toIntExact(employeeId)
-                );
+                employeeRepo.existsById(employeeId);
 
         assertTrue(existsBeforeDelete);
 
-        employeeRepo.deleteById(
-                Math.toIntExact(employeeId)
-        );
+        employeeRepo.deleteById(employeeId);
 
         Optional<Employees> employee =
-                employeeRepo.findById(
-                        Math.toIntExact(employeeId)
-                );
+                employeeRepo.findById(employeeId);
 
         assertFalse(employee.isPresent());
 
@@ -445,7 +439,7 @@ class EmployeeRepoTest {
     void testExistsById_True() {
 
         boolean exists =
-                employeeRepo.existsById(100);
+                employeeRepo.existsById(100L);
 
         assertTrue(exists);
     }
@@ -455,7 +449,7 @@ class EmployeeRepoTest {
     void testExistsById_False() {
 
         boolean exists =
-                employeeRepo.existsById(99999);
+                employeeRepo.existsById(99999L);
 
         assertFalse(exists);
     }
