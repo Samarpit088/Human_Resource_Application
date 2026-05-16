@@ -4,12 +4,14 @@ import com.example.Human_Resource_Managment.Entity.Employees;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 
 import java.math.BigDecimal;
 import java.util.Optional;
 
+@RepositoryRestResource(path = "employees")
 public interface EmployeeRepo
-        extends JpaRepository<Employees, Integer> {
+        extends JpaRepository<Employees, Long> {
 
     Optional<Employees> findByEmail(String email);
 
