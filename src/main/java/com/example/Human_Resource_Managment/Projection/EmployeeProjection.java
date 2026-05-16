@@ -14,4 +14,6 @@ public interface EmployeeProjection {
     String getFirstName();
 
     String getLastName();
+
+
 }

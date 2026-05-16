@@ -99,7 +99,7 @@ class DepartmentsRepoTest {
     void testGetManager_Invalid() {
 
         Optional<Employees> employee =
-                employeeRepo.findById(99999);
+                employeeRepo.findById(99999L);
 
         assertFalse(employee.isPresent());
 
