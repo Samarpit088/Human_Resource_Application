@@ -1,16 +1,13 @@
 package com.example.Human_Resource_Managment.Repository;
 
-import java.util.Optional;
-
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
-
 import com.example.Human_Resource_Managment.Entity.Region;
+import com.example.Human_Resource_Managment.Projection.RegionProjection;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 
-@Repository
-public interface RegionRepo extends JpaRepository<Region, Integer> {
-
-
+@RepositoryRestResource(
+        path = "regions",
+        excerptProjection = RegionProjection.class
+)
+public interface RegionRepo extends JpaRepository<Region, Long> {
 }
