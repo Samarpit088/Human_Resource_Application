@@ -85,7 +85,7 @@ class CountriesRepoTest {
     void testSaveCountry() {
 
         Optional<Region> region =
-                regionRepo.findById(30);
+                regionRepo.findById(30L);
 
         Countries country = new Countries();
 
