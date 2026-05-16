@@ -51,7 +51,7 @@ class RegionRepoTest {
     void testFindRegionById() {
 
         Optional<Region> region =
-                regionRepo.findById(new Long(10));
+                regionRepo.findById(10L);
 
         assertTrue(region.isPresent());
 
@@ -63,7 +63,7 @@ class RegionRepoTest {
     void testExistsById() {
 
         boolean exists =
-                regionRepo.existsById(new Long((10)));
+                regionRepo.existsById(10L);
 
         assertTrue(exists);
 
@@ -74,7 +74,7 @@ class RegionRepoTest {
 
         Region region = new Region();
 
-        region.setRegionId(new Long(70));
+        region.setRegionId(70L);
         region.setRegionName("Test Region");
 
         Region savedRegion =
