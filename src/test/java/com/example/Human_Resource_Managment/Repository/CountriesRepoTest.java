@@ -3,6 +3,7 @@ package com.example.Human_Resource_Managment.Repository;
 import com.example.Human_Resource_Managment.Entity.Countries;
 import com.example.Human_Resource_Managment.Entity.Employees;
 import com.example.Human_Resource_Managment.Entity.Region;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -10,6 +11,7 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.TestPropertySource;
 
 import java.util.Optional;
@@ -131,5 +133,112 @@ class CountriesRepoTest {
         });
 
         assertFalse(employees.isEmpty());
+    }
+    // =========================================================
+// COUNTRY -> EMPLOYEES
+// =========================================================
+
+    @Test
+    @DisplayName("REPO_COUNTRY_EMPLOYEE_001")
+    void testEmployeesByCountryName() {
+
+        Pageable pageable =
+                PageRequest.of(0,5);
+
+        Page<Employees> employees =
+                employeeRepo
+                        .findByDepartmentLocationCountryCountryNameContainingIgnoreCase(
+                                "United",
+                                pageable
+                        );
+
+        assertFalse(employees.isEmpty());
+
+        employees.forEach(emp ->
+
+                System.out.println(
+                        emp.getFirstName()
+                                + " -> "
+                                + emp.getDepartment()
+                                .getLocation()
+                                .getCountry()
+                                .getCountryName()
+                )
+        );
+    }
+
+    @Test
+    @DisplayName("REPO_COUNTRY_EMPLOYEE_002")
+    void testEmployeesByInvalidCountryName() {
+
+        Pageable pageable =
+                PageRequest.of(0,5);
+
+        Page<Employees> employees =
+                employeeRepo
+                        .findByDepartmentLocationCountryCountryNameContainingIgnoreCase(
+                                "INVALID_COUNTRY",
+                                pageable
+                        );
+
+        assertTrue(employees.isEmpty());
+    }
+
+    @Test
+    @DisplayName("REPO_REGION_COUNTRY_EMPLOYEE_001")
+    void testEmployeesByRegionIdAndCountryName() {
+
+        Pageable pageable = PageRequest.of(0, 5);
+
+        Page<Employees> employees =
+                employeeRepo
+                        .findByDepartmentLocationCountryRegionRegionIdAndDepartmentLocationCountryCountryNameContainingIgnoreCase(
+                                10L,
+                                "United",
+                                pageable
+                        );
+
+        assertFalse(employees.isEmpty());
+
+        employees.forEach(emp ->
+                System.out.println(
+                        emp.getFirstName()
+                                + " -> Country : "
+                                + emp.getDepartment()
+                                .getLocation()
+                                .getCountry()
+                                .getCountryName()
+                                + " -> Region Id : "
+                                + emp.getDepartment()
+                                .getLocation()
+                                .getCountry()
+                                .getRegion()
+                                .getRegionId()
+                                + " -> Region : "
+                                + emp.getDepartment()
+                                .getLocation()
+                                .getCountry()
+                                .getRegion()
+                                .getRegionName()
+                )
+        );
+    }
+
+    @Test
+    @DisplayName("REPO_REGION_COUNTRY_EMPLOYEE_002")
+    void testEmployeesByInvalidRegionIdAndCountryName() {
+
+        Pageable pageable =
+                PageRequest.of(0,5);
+
+        Page<Employees> employees =
+                employeeRepo
+                        .findByDepartmentLocationCountryRegionRegionIdAndDepartmentLocationCountryCountryNameContainingIgnoreCase(
+                                9999L,
+                                "INVALID",
+                                pageable
+                        );
+
+        assertTrue(employees.isEmpty());
     }
 }

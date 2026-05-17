@@ -89,4 +89,11 @@ public interface EmployeeRepo
             String countryName,
             Pageable pageable
     );
+
+    Page<Employees>
+    findByDepartmentLocationCountryRegionRegionIdAndDepartmentLocationCountryCountryNameContainingIgnoreCase(
+            Long regionId,
+            String countryName,
+            Pageable pageable
+    );
 }
