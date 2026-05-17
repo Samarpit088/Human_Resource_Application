@@ -2,6 +2,7 @@ package com.example.Human_Resource_Managment.Repository;
 
 import com.example.Human_Resource_Managment.Entity.Employees;
 import com.example.Human_Resource_Managment.Entity.Region;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -9,6 +10,7 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.TestPropertySource;
 
 import java.util.Optional;
@@ -51,7 +53,7 @@ class RegionRepoTest {
     void testFindRegionById() {
 
         Optional<Region> region =
-                regionRepo.findById(10);
+                regionRepo.findById(10L);
 
         assertTrue(region.isPresent());
 
@@ -63,7 +65,7 @@ class RegionRepoTest {
     void testExistsById() {
 
         boolean exists =
-                regionRepo.existsById(10);
+                regionRepo.existsById(10L);
 
         assertTrue(exists);
 
@@ -74,7 +76,7 @@ class RegionRepoTest {
 
         Region region = new Region();
 
-        region.setRegionId(new Long(70));
+        region.setRegionId(70L);
         region.setRegionName("Test Region");
 
         Region savedRegion =
@@ -117,5 +119,55 @@ class RegionRepoTest {
         });
 
         assertTrue(employees.getTotalElements() >= 0);
+    }
+    // =========================================================
+// REGION -> EMPLOYEES
+// =========================================================
+
+    @Test
+    @DisplayName("REPO_REGION_EMPLOYEE_001")
+    void testEmployeesByRegionId() {
+
+        Pageable pageable =
+                PageRequest.of(0,5);
+
+        Page<Employees> employees =
+                employeeRepo
+                        .findByDepartmentLocationCountryRegionRegionId(
+                                10L,
+                                pageable
+                        );
+
+        assertFalse(employees.isEmpty());
+
+        employees.forEach(emp ->
+
+                System.out.println(
+                        emp.getFirstName()
+                                + " -> "
+                                + emp.getDepartment()
+                                .getLocation()
+                                .getCountry()
+                                .getRegion()
+                                .getRegionName()
+                )
+        );
+    }
+
+    @Test
+    @DisplayName("REPO_REGION_EMPLOYEE_002")
+    void testEmployeesByInvalidRegionId() {
+
+        Pageable pageable =
+                PageRequest.of(0,5);
+
+        Page<Employees> employees =
+                employeeRepo
+                        .findByDepartmentLocationCountryRegionRegionId(
+                                9999L,
+                                pageable
+                        );
+
+        assertTrue(employees.isEmpty());
     }
 }

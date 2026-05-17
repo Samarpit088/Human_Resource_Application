@@ -9,7 +9,9 @@ import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 import java.util.List;
 
 
-
+@RepositoryRestResource(
+        path = "departments"
+)
 public interface DepartmentRepo
         extends JpaRepository<Department, Long> {
     List<Department> findByLocationLocationId(Long locationId);
