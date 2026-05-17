@@ -6,6 +6,8 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.List;
+
 @Entity
 @Table(name = "departments")
 @Getter
@@ -31,4 +33,7 @@ public class Department {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "location_id")
     private Locations location;
+
+    @OneToMany(mappedBy = "department")
+    private List<Employees> employees;
 }
