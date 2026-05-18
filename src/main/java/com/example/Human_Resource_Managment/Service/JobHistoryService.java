@@ -7,6 +7,9 @@ import com.example.Human_Resource_Managment.ExceptionHandling.ValidationExceptio
 import com.example.Human_Resource_Managment.Repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,7 +32,6 @@ public class JobHistoryService {
     private final JobHistoryRepo jobHistoryRepo;
     private final JobRepo jobRepo;
     private final DepartmentRepo departmentRepo;
-    private final SalaryAuditService salaryAuditService;
     
     // Use a far future date to represent "currently working" since end_date is NOT NULL in schema
     private static final LocalDate FAR_FUTURE_DATE = LocalDate.of(9999, 12, 31);
@@ -40,6 +42,11 @@ public class JobHistoryService {
      * All operations are transactional - if any part fails, everything rolls back
      */
     @Transactional
+    @Caching(evict = {
+        @CacheEvict(value = "currentJobHistory", key = "#employeeId"),
+        @CacheEvict(value = "jobHistory", key = "#employeeId"),
+        @CacheEvict(value = "employees", key = "#employeeId")
+    })
     public Map<String, Object> updateEmployeeJob(
             Long employeeId,
             String jobId,
@@ -150,11 +157,9 @@ public class JobHistoryService {
         
         if (existingRecords.isEmpty()) {
             // This is the FIRST job history record for this employee
-            // Create a record starting from hire_date with CURRENT job/dept/salary
+            // Create a record starting from hire_date with CURRENT job/dept
             LocalDate hireDate = employee.getHireDate();
             
-            // Store current salary as initial salary in Redis
-            salaryAuditService.storeInitialSalary(employee.getEmployeeId(), employee.getSalary());
             log.info("First job history record for employee {}. Creating initial record from hire_date: {}", 
                     employee.getEmployeeId(), hireDate);
             
@@ -170,18 +175,7 @@ public class JobHistoryService {
             
             log.info("Created initial job history record: employee={}, start={}, end={}", 
                     employee.getEmployeeId(), hireDate, startDate);
-            
-            // Now continue with creating the new record with the provided start_date
-            // No need to close previous record since we just created and closed it
         } else {
-            // For existing employees with job history
-            // If initial salary not in Redis, store current salary as initial
-            if (salaryAuditService.getInitialSalary(employee.getEmployeeId()).isEmpty()) {
-                salaryAuditService.storeInitialSalary(employee.getEmployeeId(), employee.getSalary());
-                log.info("Stored initial salary for existing employee {} from current salary: {}", 
-                        employee.getEmployeeId(), employee.getSalary());
-            }
-            
             // Close previous job history record
             closePreviousJobHistoryRecord(employee.getEmployeeId(), startDate);
         }
@@ -206,19 +200,7 @@ public class JobHistoryService {
 
         // Update employee record
         if (salary != null) {
-            BigDecimal oldSalary = employee.getSalary();
             employee.setSalary(salary);
-            
-            // Record salary change in audit log
-            if (salaryChanged) {
-                salaryAuditService.recordSalaryChange(
-                    employee.getEmployeeId(),
-                    oldSalary,
-                    salary,
-                    startDate,
-                    "Salary Hike"
-                );
-            }
         }
         if (newJob != null) {
             employee.setJob(newJob);
@@ -391,7 +373,9 @@ public class JobHistoryService {
      * Get current job history for an employee
      */
     @Transactional(readOnly = true)
+    @Cacheable(value = "currentJobHistory", key = "#employeeId")
     public JobHistory getCurrentJobHistory(Long employeeId) {
+        log.info("Fetching current job history for employee ID: {} from database", employeeId);
         return jobHistoryRepo.findByIdEmployeeIdAndEndDate(employeeId, FAR_FUTURE_DATE)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "No active job history found for employee ID: " + employeeId));
@@ -401,8 +385,9 @@ public class JobHistoryService {
      * Get all job history for an employee
      */
     @Transactional(readOnly = true)
+    @Cacheable(value = "jobHistory", key = "#employeeId")
     public List<JobHistory> getEmployeeJobHistory(Long employeeId) {
-        log.info("Fetching all job history for employee ID: {}", employeeId);
+        log.info("Fetching all job history for employee ID: {} from database", employeeId);
         List<JobHistory> history = jobHistoryRepo.findByIdEmployeeIdOrderByIdStartDateDesc(employeeId);
         log.info("Found {} job history records for employee ID: {}", history.size(), employeeId);
         
@@ -418,81 +403,5 @@ public class JobHistoryService {
     @Transactional(readOnly = true)
     public boolean isCurrentlyWorking(Long employeeId) {
         return jobHistoryRepo.findByIdEmployeeIdAndEndDate(employeeId, FAR_FUTURE_DATE).isPresent();
-    }
-    
-    /**
-     * Get salary history for an employee
-     */
-    public List<SalaryAuditService.SalaryAuditRecord> getSalaryHistory(Long employeeId) {
-        return salaryAuditService.getSalaryHistory(employeeId);
-    }
-    
-    /**
-     * Get combined job and salary history
-     */
-    @Transactional(readOnly = true)
-    public List<Map<String, Object>> getCombinedHistory(Long employeeId) {
-        List<JobHistory> jobHistory = jobHistoryRepo.findByIdEmployeeIdOrderByIdStartDateDesc(employeeId);
-        
-        if (jobHistory.isEmpty()) {
-            return new ArrayList<>();
-        }
-        
-        // Build response with previous salary for each record
-        List<Map<String, Object>> result = new ArrayList<>();
-        
-        for (int i = 0; i < jobHistory.size(); i++) {
-            JobHistory currentRecord = jobHistory.get(i);
-            Map<String, Object> record = new HashMap<>();
-            
-            record.put("employeeId", currentRecord.getId().getEmployeeId());
-            record.put("startDate", currentRecord.getId().getStartDate());
-            record.put("endDate", currentRecord.getEndDate());
-            record.put("jobId", currentRecord.getJob() != null ? currentRecord.getJob().getJobId() : null);
-            record.put("jobTitle", currentRecord.getJob() != null ? currentRecord.getJob().getJobTitle() : null);
-            record.put("departmentId", currentRecord.getDepartment() != null ? currentRecord.getDepartment().getDepartmentId() : null);
-            record.put("departmentName", currentRecord.getDepartment() != null ? currentRecord.getDepartment().getDepartmentName() : null);
-            record.put("currentlyWorking", currentRecord.getEndDate().equals(FAR_FUTURE_DATE));
-            
-            // Current Salary: Always from employee table
-            BigDecimal currentSalary = currentRecord.getEmployee() != null ? currentRecord.getEmployee().getSalary() : null;
-            record.put("currentSalary", currentSalary);
-            
-            // Previous Salary Logic:
-            // - For the FIRST (oldest) record: N/A (no previous job)
-            // - For subsequent records: Get salary from the NEXT record in the list (which is older)
-            BigDecimal previousSalary = null;
-            
-            if (i == jobHistory.size() - 1) {
-                // This is the FIRST (oldest) record - no previous salary
-                previousSalary = null;
-            } else {
-                // Get salary from the next record (older record)
-                JobHistory olderRecord = jobHistory.get(i + 1);
-                LocalDate olderStartDate = olderRecord.getId().getStartDate();
-                
-                // Try to get from Redis salary audit
-                List<SalaryAuditService.SalaryAuditRecord> salaryHistory = 
-                        salaryAuditService.getSalaryHistory(employeeId);
-                
-                // Find the salary that was effective during the older period
-                previousSalary = salaryHistory.stream()
-                        .filter(sr -> !sr.getEffectiveDate().isAfter(olderStartDate))
-                        .max(Comparator.comparing(SalaryAuditService.SalaryAuditRecord::getEffectiveDate))
-                        .map(SalaryAuditService.SalaryAuditRecord::getNewSalary)
-                        .orElse(null);
-                
-                // If not found in salary audit, try to get initial salary from Redis
-                if (previousSalary == null) {
-                    previousSalary = salaryAuditService.getInitialSalary(employeeId).orElse(null);
-                }
-            }
-            
-            record.put("previousSalary", previousSalary);
-            
-            result.add(record);
-        }
-        
-        return result;
     }
 }
