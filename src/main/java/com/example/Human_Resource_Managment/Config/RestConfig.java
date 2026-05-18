@@ -1,6 +1,7 @@
 package com.example.Human_Resource_Managment.Config;
 
 import com.example.Human_Resource_Managment.Entity.*;
+import com.example.Human_Resource_Managment.Projection.EmployeeDetailedView;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.rest.core.config.RepositoryRestConfiguration;
 import org.springframework.data.rest.webmvc.config.RepositoryRestConfigurer;
@@ -28,5 +29,7 @@ public class RestConfig implements RepositoryRestConfigurer {
                 Employees.class,
                 JobHistory.class
         );
+        config.getProjectionConfiguration()
+                .addProjection(EmployeeDetailedView.class);
     }
 }

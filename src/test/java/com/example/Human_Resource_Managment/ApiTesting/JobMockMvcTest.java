@@ -95,4 +95,87 @@ public class JobMockMvcTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$._embedded.employeeses").exists());
     }
+    @Test
+    void findEmployeesByJobId_WithProjection_ShouldReturnProjectedEmployees() throws Exception {
+
+        mockMvc.perform(
+                        get("/api/v1/employees/search/findByJobJobId")
+                                .param("jobId", "IT_PROG")
+                                .param("projection", "employeeDetailedView")
+                                .param("page", "0")
+                                .param("size", "2")
+                )
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$._embedded.employeeses").exists())
+                .andExpect(jsonPath("$._embedded.employeeses[0].employeeId").exists())
+                .andExpect(jsonPath("$._embedded.employeeses[0].firstName").exists())
+                .andExpect(jsonPath("$._embedded.employeeses[0].lastName").exists())
+                .andExpect(jsonPath("$._embedded.employeeses[0].email").exists())
+                .andExpect(jsonPath("$._embedded.employeeses[0].salary").exists());
+    }
+    @Test
+    void findEmployeesByJobId_WithProjectionAndPaging_ShouldReturnProjectedEmployees() throws Exception {
+
+        mockMvc.perform(
+                        get("/api/v1/employees/search/findByJobJobId")
+                                .param("jobId", "IT_PROG")
+                                .param("projection", "employeeDetailedView")
+                                .param("page", "0")
+                                .param("size", "2")
+                )
+                .andExpect(status().isOk())
+
+                // projection data
+                .andExpect(jsonPath("$._embedded.employeeses").exists())
+                .andExpect(jsonPath("$._embedded.employeeses[0].employeeId").exists())
+                .andExpect(jsonPath("$._embedded.employeeses[0].firstName").exists())
+                .andExpect(jsonPath("$._embedded.employeeses[0].lastName").exists())
+                .andExpect(jsonPath("$._embedded.employeeses[0].email").exists())
+                .andExpect(jsonPath("$._embedded.employeeses[0].salary").exists())
+
+                // paging data
+                .andExpect(jsonPath("$.page").exists())
+                .andExpect(jsonPath("$.page.size").value(2))
+                .andExpect(jsonPath("$.page.number").value(0))
+                .andExpect(jsonPath("$.page.totalElements").exists())
+                .andExpect(jsonPath("$.page.totalPages").exists())
+
+                // pagination links
+                .andExpect(jsonPath("$._links.self.href").exists())
+                .andExpect(jsonPath("$._links.first.href").exists())
+                .andExpect(jsonPath("$._links.last.href").exists());
+    }
+    @Test
+    void getAllJobs_WithProjectionAndPaging_ShouldReturnPagedJobs() throws Exception {
+
+        mockMvc.perform(
+                        get("/api/v1/jobs")
+                                .param("projection", "jobList")
+                                .param("page", "0")
+                                .param("size", "2")
+                )
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$._embedded.jobs").exists())
+                .andExpect(jsonPath("$._embedded.jobs.length()").value(2))
+                .andExpect(jsonPath("$._embedded.jobs[0].jobId").exists())
+                .andExpect(jsonPath("$._embedded.jobs[0].jobTitle").exists())
+                .andExpect(jsonPath("$._embedded.jobs[0].minSalary").exists())
+                .andExpect(jsonPath("$._embedded.jobs[0].maxSalary").exists())
+                .andExpect(jsonPath("$.page.size").value(2))
+                .andExpect(jsonPath("$.page.number").value(0))
+                .andExpect(jsonPath("$.page.totalElements").exists())
+                .andExpect(jsonPath("$.page.totalPages").exists())
+
+                .andExpect(jsonPath("$.page").exists())
+                .andExpect(jsonPath("$.page.size").value(2))
+                .andExpect(jsonPath("$.page.number").value(0))
+                .andExpect(jsonPath("$.page.totalElements").exists())
+                .andExpect(jsonPath("$.page.totalPages").exists())
+
+                .andExpect(jsonPath("$._links.self.href").exists())
+                .andExpect(jsonPath("$._links.first.href").exists())
+                .andExpect(jsonPath("$._links.last.href").exists())
+
+                .andExpect(jsonPath("$._embedded.jobs.length()").value(2));;
+    }
 }
