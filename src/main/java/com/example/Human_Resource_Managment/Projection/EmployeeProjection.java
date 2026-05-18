@@ -4,7 +4,7 @@ import com.example.Human_Resource_Managment.Entity.Employees;
 import org.springframework.data.rest.core.config.Projection;
 
 @Projection(
-        name = "employeeView",
+        name = "employeeSummary",
         types = Employees.class
 )
 public interface EmployeeProjection {
@@ -15,5 +15,17 @@ public interface EmployeeProjection {
 
     String getLastName();
 
+    JobInfo getJob();
 
+    DepartmentInfo getDepartment();
+
+    interface JobInfo {
+
+        String getJobTitle();
+    }
+
+    interface DepartmentInfo {
+
+        String getDepartmentName();
+    }
 }
