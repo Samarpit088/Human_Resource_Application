@@ -101,7 +101,7 @@ class LocationsRepoTest {
     void testSearchLocationById_ValidLocationId_ReturnLocationDetails() {
 
         Optional<Locations> result =
-                locationsRepo.findById(1000);
+                locationsRepo.findById(1000L);
 
         assertTrue(result.isPresent());
 
@@ -120,7 +120,7 @@ class LocationsRepoTest {
     void testSearchLocationById_MaximumIdValue_SuccessfulRetrieval() {
 
         Optional<Locations> result =
-                locationsRepo.findById(Integer.MAX_VALUE);
+                locationsRepo.findById((long) Integer.MAX_VALUE);
 
         assertNotNull(result);
 
@@ -215,7 +215,7 @@ class LocationsRepoTest {
     void testCheckLocationExists_ExistingLocationId_ReturnTrue() {
 
         boolean exists =
-                locationsRepo.existsById(1000);
+                locationsRepo.existsById(1000L);
 
         assertTrue(exists);
 
@@ -233,7 +233,7 @@ class LocationsRepoTest {
     void testCheckLocationExists_NonExistingLocationId_ReturnFalse() {
 
         boolean exists =
-                locationsRepo.existsById(999999);
+                locationsRepo.existsById(999999L);
 
         assertFalse(exists);
 
