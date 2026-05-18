@@ -10,8 +10,11 @@ import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 import java.math.BigDecimal;
 import java.util.Optional;
 
-@RepositoryRestResource(path = "employees",
-        excerptProjection = EmployeeProjection.class)
+@RepositoryRestResource(
+        path = "employees",
+        collectionResourceRel = "employeeses",
+        excerptProjection = EmployeeProjection.class
+)
 public interface EmployeeRepo
         extends JpaRepository<Employees, Long> {
 
