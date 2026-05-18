@@ -63,7 +63,7 @@ class EmployeeApiTest {
                         get("/api/v1/employees/100")
                                 .param(
                                         "projection",
-                                        "employeeSummary"
+                                        "employeeView"
                                 )
                 )
                 .andExpect(status().isOk())
@@ -121,13 +121,13 @@ class EmployeeApiTest {
 
     @Test
     @Order(4)
-    void testEmployeeDetailedViewProjection() throws Exception {
+    void testEmployeeViewProjection() throws Exception {
 
         mockMvc.perform(
                         get("/api/v1/employees/100")
                                 .param(
                                         "projection",
-                                        "employeeDetailedView"
+                                        "employeeView"
                                 )
                 )
                 .andExpect(status().isOk())
@@ -136,11 +136,7 @@ class EmployeeApiTest {
                                 .value(100)
                 )
                 .andExpect(
-                        jsonPath("$.email")
-                                .exists()
-                )
-                .andExpect(
-                        jsonPath("$.salary")
+                        jsonPath("$._embedded.job.jobTitle")
                                 .exists()
                 );
     }
@@ -190,7 +186,7 @@ class EmployeeApiTest {
                         get("/api/v1/employees/999")
                                 .param(
                                         "projection",
-                                        "employeeSummary"
+                                        "employeeView"
                                 )
                 )
                 .andExpect(status().isOk())
@@ -242,7 +238,7 @@ class EmployeeApiTest {
                         get("/api/v1/employees/999")
                                 .param(
                                         "projection",
-                                        "employeeSummary"
+                                        "employeeView"
                                 )
                 )
                 .andExpect(status().isOk())
@@ -279,7 +275,7 @@ class EmployeeApiTest {
                         get("/api/v1/employees/999")
                                 .param(
                                         "projection",
-                                        "employeeDetailedView"
+                                        "employeeView"
                                 )
                 )
                 .andExpect(status().isOk())
