@@ -30,6 +30,8 @@ class DepartmentsRepoTest {
     private DepartmentRepo departmentRepo;
     @Autowired
     private EmployeeRepo employeeRepo;
+    @Autowired
+    private LocationsRepo locationRepo;
 
     /**
      * TC ID : DEP_001
@@ -174,6 +176,218 @@ class DepartmentsRepoTest {
 
         System.out.println(
                 "Department saved successfully"
+        );
+    }
+
+    @Test
+    @DisplayName("REPO_SAVEDEPT_002")
+    void testSaveDepartment_WithValidManagerAndLocation() {
+
+        // =========================
+        // MANAGER VALIDATION
+        // =========================
+
+        Optional<Employees> optionalManager =
+                employeeRepo.findById(103L);
+
+        assertTrue(optionalManager.isPresent());
+
+        // =========================
+        // LOCATION VALIDATION
+        // =========================
+
+        Optional<Locations> optionalLocation =
+                locationRepo.findById(1700L);
+
+        assertTrue(optionalLocation.isPresent());
+
+        // =========================
+        // CREATE DEPARTMENT
+        // =========================
+
+        Department department =
+                new Department();
+
+        department.setDepartmentId(1001L);
+
+        department.setDepartmentName(
+                "Machine Learning"
+        );
+
+        department.setManager(
+                optionalManager.get()
+        );
+
+        department.setLocation(
+                optionalLocation.get()
+        );
+
+        Department savedDepartment =
+                departmentRepo.save(department);
+
+        // =========================
+        // ASSERTIONS
+        // =========================
+
+        assertNotNull(savedDepartment);
+
+        assertEquals(
+                103L,
+                savedDepartment
+                        .getManager()
+                        .getEmployeeId()
+        );
+
+        assertEquals(
+                1700L,
+                savedDepartment
+                        .getLocation()
+                        .getLocationId()
+        );
+
+        System.out.println(
+                "Department saved successfully"
+        );
+    }
+
+    @Test
+    @DisplayName("REPO_UPDATEDEPT_003")
+    void testUpdateDepartment_WithValidManagerAndLocation() {
+
+        // =========================
+        // FETCH DEPARTMENT
+        // =========================
+
+        Optional<Department> optionalDepartment =
+                departmentRepo.findById(60L);
+
+        assertTrue(optionalDepartment.isPresent());
+
+        Department department =
+                optionalDepartment.get();
+
+        // =========================
+        // FETCH VALID MANAGER
+        // =========================
+
+        Optional<Employees> optionalManager =
+                employeeRepo.findById(103L);
+
+        assertTrue(optionalManager.isPresent());
+
+        // =========================
+        // FETCH VALID LOCATION
+        // =========================
+
+        Optional<Locations> optionalLocation =
+                locationRepo.findById(1700L);
+
+        assertTrue(optionalLocation.isPresent());
+
+        // =========================
+        // UPDATE VALUES
+        // =========================
+
+        department.setDepartmentName(
+                "Updated AI Department"
+        );
+
+        department.setManager(
+                optionalManager.get()
+        );
+
+        department.setLocation(
+                optionalLocation.get()
+        );
+
+        // =========================
+        // SAVE
+        // =========================
+
+        Department updatedDepartment =
+                departmentRepo.save(department);
+
+        // =========================
+        // ASSERTIONS
+        // =========================
+
+        assertNotNull(updatedDepartment);
+
+        assertEquals(
+                "Updated AI Department",
+                updatedDepartment.getDepartmentName()
+        );
+
+        assertEquals(
+                103L,
+                updatedDepartment
+                        .getManager()
+                        .getEmployeeId()
+        );
+
+        assertEquals(
+                1700L,
+                updatedDepartment
+                        .getLocation()
+                        .getLocationId()
+        );
+
+        System.out.println(
+                "Department updated successfully"
+        );
+    }
+
+    @Test
+    @DisplayName("REPO_SAVEDEPT_003")
+    void testSaveDepartment_InvalidManager() {
+
+        // =========================
+        // INVALID MANAGER
+        // =========================
+
+        Optional<Employees> optionalManager =
+                employeeRepo.findById(99999L);
+
+        assertFalse(optionalManager.isPresent());
+
+        // =========================
+        // VALID LOCATION
+        // =========================
+
+        Optional<Locations> optionalLocation =
+                locationRepo.findById(1700L);
+
+        assertTrue(optionalLocation.isPresent());
+
+        System.out.println(
+                "Invalid manager detected"
+        );
+    }
+
+    @Test
+    @DisplayName("REPO_SAVEDEPT_004")
+    void testSaveDepartment_InvalidLocation() {
+
+        // =========================
+        // VALID MANAGER
+        // =========================
+
+        Optional<Employees> optionalManager =
+                employeeRepo.findById(103L);
+
+        assertTrue(optionalManager.isPresent());
+
+        // =========================
+        // INVALID LOCATION
+        // =========================
+
+        Optional<Locations> optionalLocation =
+                locationRepo.findById(99999L);
+
+        assertFalse(optionalLocation.isPresent());
+
+        System.out.println(
+                "Invalid location detected"
         );
     }
 

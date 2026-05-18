@@ -20,4 +20,6 @@ public interface DepartmentDetailsProjection {
     ManagerProjection getManager();
 
     List<EmployeeDetailsProjection> getEmployees();
+
+
 }
