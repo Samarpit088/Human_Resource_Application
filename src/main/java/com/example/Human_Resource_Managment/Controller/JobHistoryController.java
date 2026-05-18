@@ -110,7 +110,7 @@ public class JobHistoryController {
     }
 
     /**
-     * Get all job history for an employee
+     * Get all job history for an employee (without salary history)
      */
     @GetMapping("/employee/{employeeId}")
     public ResponseEntity<?> getEmployeeJobHistory(
@@ -129,7 +129,6 @@ public class JobHistoryController {
                 map.put("jobTitle", jh.getJob() != null ? jh.getJob().getJobTitle() : null);
                 map.put("departmentId", jh.getDepartment() != null ? jh.getDepartment().getDepartmentId() : null);
                 map.put("departmentName", jh.getDepartment() != null ? jh.getDepartment().getDepartmentName() : null);
-                map.put("currentSalary", jh.getEmployee() != null ? jh.getEmployee().getSalary() : null);
                 map.put("currentlyWorking", jh.getEndDate().equals(LocalDate.of(9999, 12, 31)));
                 return map;
             }).collect(Collectors.toList());
@@ -178,36 +177,6 @@ public class JobHistoryController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(createErrorResponse("Error: " + e.getMessage(), false));
-        }
-    }
-    
-    /**
-     * Get salary history for an employee
-     */
-    @GetMapping("/salary-history/{employeeId}")
-    public ResponseEntity<?> getSalaryHistory(@PathVariable Long employeeId) {
-        try {
-            var salaryHistory = jobHistoryService.getSalaryHistory(employeeId);
-            return ResponseEntity.ok(salaryHistory);
-        } catch (Exception e) {
-            log.error("Error fetching salary history: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(createErrorResponse("Failed to fetch salary history", false));
-        }
-    }
-    
-    /**
-     * Get combined job and salary history
-     */
-    @GetMapping("/combined/{employeeId}")
-    public ResponseEntity<?> getCombinedHistory(@PathVariable Long employeeId) {
-        try {
-            var combinedHistory = jobHistoryService.getCombinedHistory(employeeId);
-            return ResponseEntity.ok(combinedHistory);
-        } catch (Exception e) {
-            log.error("Error fetching combined history: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(createErrorResponse("Failed to fetch combined history", false));
         }
     }
 

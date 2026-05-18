@@ -160,40 +160,7 @@ class JobHistoryApiTest {
     }
 
     @Test
-    @DisplayName("Test 6: Get Combined History - Success")
-    void testGetCombinedHistory_Success() throws Exception {
-        // Given
-        List<Map<String, Object>> combinedHistory = new ArrayList<>();
-        
-        Map<String, Object> record1 = new HashMap<>();
-        record1.put("employeeId", 102L);
-        record1.put("startDate", LocalDate.of(2024, 1, 1));
-        record1.put("endDate", LocalDate.of(9999, 12, 31));
-        record1.put("jobId", "IT_PROG");
-        record1.put("jobTitle", "Programmer");
-        record1.put("departmentId", 60L);
-        record1.put("departmentName", "IT");
-        record1.put("salaryAtJoining", new BigDecimal("12000.00"));
-        record1.put("currentSalary", new BigDecimal("15000.00"));
-        record1.put("currentlyWorking", true);
-        
-        combinedHistory.add(record1);
-
-        when(jobHistoryService.getCombinedHistory(102L))
-                .thenReturn(combinedHistory);
-
-        // When & Then
-        mockMvc.perform(get("/api/job-history/combined/102"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].employeeId").value(102))
-                .andExpect(jsonPath("$[0].jobId").value("IT_PROG"))
-                .andExpect(jsonPath("$[0].salaryAtJoining").value(12000.00))
-                .andExpect(jsonPath("$[0].currentSalary").value(15000.00))
-                .andExpect(jsonPath("$[0].currentlyWorking").value(true));
-    }
-
-    @Test
-    @DisplayName("Test 7: Update Employee Job - Missing Required Fields")
+    @DisplayName("Test 6: Update Employee Job - Missing Required Fields")
     void testUpdateEmployeeJob_MissingRequiredFields() throws Exception {
         // Given - Request without employeeId
         JobHistoryController.UpdateJobRequest invalidRequest = new JobHistoryController.UpdateJobRequest();
@@ -208,7 +175,7 @@ class JobHistoryApiTest {
     }
 
     @Test
-    @DisplayName("Test 8: Update Employee Job - Invalid Salary (Negative)")
+    @DisplayName("Test 7: Update Employee Job - Invalid Salary (Negative)")
     void testUpdateEmployeeJob_NegativeSalary() throws Exception {
         // Given
         validRequest.setSalary(new BigDecimal("-1000.00"));
