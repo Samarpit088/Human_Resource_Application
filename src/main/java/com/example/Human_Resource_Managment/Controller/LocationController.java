@@ -85,14 +85,14 @@ public class LocationController {
         // Apply filters
         java.util.stream.Stream<Locations> stream = allLocations.stream();
         
-        // Search filter
+        // Search filter - matches city, address, or state starting with the search term
         if (query != null && !query.trim().isEmpty()) {
             String searchTerm = query.toLowerCase();
             stream = stream.filter(loc -> 
-                (loc.getCity() != null && loc.getCity().toLowerCase().contains(searchTerm)) ||
-                (loc.getStreetAddress() != null && loc.getStreetAddress().toLowerCase().contains(searchTerm)) ||
-                (loc.getStateProvince() != null && loc.getStateProvince().toLowerCase().contains(searchTerm)) ||
-                loc.getLocationId().toString().contains(searchTerm)
+                (loc.getCity() != null && loc.getCity().toLowerCase().startsWith(searchTerm)) ||
+                (loc.getStreetAddress() != null && loc.getStreetAddress().toLowerCase().startsWith(searchTerm)) ||
+                (loc.getStateProvince() != null && loc.getStateProvince().toLowerCase().startsWith(searchTerm)) ||
+                loc.getLocationId().toString().startsWith(searchTerm)
             );
         }
         

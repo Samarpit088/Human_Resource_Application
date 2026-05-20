@@ -17,10 +17,10 @@ import java.util.List;
 public class Department {
 
     @Id
-    @Column(name = "department_id", precision = 4, scale = 0)
+    @Column(name = "department_id", precision = 6, scale = 0)
     @NotNull(message = "Department id is required")
     @Min(value = 1, message = "Department id must be positive")
-    @Max(value = 9999, message = "Department id cannot exceed 4 digits")
+    @Max(value = 999999, message = "Department id cannot exceed 6 digits")
     private Long departmentId;
 
     @Column(name = "department_name", nullable = false, length = 30)

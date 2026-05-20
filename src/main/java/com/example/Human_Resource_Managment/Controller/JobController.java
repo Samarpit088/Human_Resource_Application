@@ -8,6 +8,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -80,11 +82,12 @@ public class JobController {
 
         java.util.stream.Stream<Job> stream = allJobs.stream();
 
+        // Search filter - matches job title or ID starting with the search term
         if (query != null && !query.trim().isEmpty()) {
             String searchTerm = query.toLowerCase();
             stream = stream.filter(job ->
-                (job.getJobTitle() != null && job.getJobTitle().toLowerCase().contains(searchTerm)) ||
-                (job.getJobId() != null && job.getJobId().toLowerCase().contains(searchTerm))
+                (job.getJobTitle() != null && job.getJobTitle().toLowerCase().startsWith(searchTerm)) ||
+                (job.getJobId() != null && job.getJobId().toLowerCase().startsWith(searchTerm))
             );
         }
 
@@ -116,19 +119,65 @@ public class JobController {
 
     /**
      * POST endpoint to create a new job
+     * Uses READ_COMMITTED transaction isolation for better performance during load testing
      */
     @PostMapping
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public ResponseEntity<Map<String, Object>> createJob(@RequestBody Map<String, Object> jobData) {
+        // Check if job ID already exists
+        if (jobRepo.existsById((String) jobData.get("jobId"))) {
+            throw new com.example.Human_Resource_Managment.ExceptionHandling.ValidationException(
+                "Job ID " + jobData.get("jobId") + " already exists");
+        }
+        
         Job job = new Job();
         job.setJobId((String) jobData.get("jobId"));
         job.setJobTitle((String) jobData.get("jobTitle"));
 
-        if (jobData.get("minSalary") != null)
-            job.setMinSalary(new BigDecimal(jobData.get("minSalary").toString()));
-        if (jobData.get("maxSalary") != null)
-            job.setMaxSalary(new BigDecimal(jobData.get("maxSalary").toString()));
+        // Validate and set minSalary
+        if (jobData.get("minSalary") != null) {
+            BigDecimal minSalary = new BigDecimal(jobData.get("minSalary").toString());
+            if (minSalary.compareTo(BigDecimal.ZERO) <= 0) {
+                throw new com.example.Human_Resource_Managment.ExceptionHandling.ValidationException(
+                    "Minimum salary must be greater than zero");
+            }
+            if (minSalary.precision() - minSalary.scale() > 6) {
+                throw new com.example.Human_Resource_Managment.ExceptionHandling.ValidationException(
+                    "Minimum salary can have maximum 6 digits");
+            }
+            job.setMinSalary(minSalary);
+        }
+        
+        // Validate and set maxSalary
+        if (jobData.get("maxSalary") != null) {
+            BigDecimal maxSalary = new BigDecimal(jobData.get("maxSalary").toString());
+            if (maxSalary.compareTo(BigDecimal.ZERO) <= 0) {
+                throw new com.example.Human_Resource_Managment.ExceptionHandling.ValidationException(
+                    "Maximum salary must be greater than zero");
+            }
+            if (maxSalary.precision() - maxSalary.scale() > 6) {
+                throw new com.example.Human_Resource_Managment.ExceptionHandling.ValidationException(
+                    "Maximum salary can have maximum 6 digits");
+            }
+            job.setMaxSalary(maxSalary);
+        }
+        
+        // Validate salary range
+        if (job.getMinSalary() != null && job.getMaxSalary() != null) {
+            if (job.getMaxSalary().compareTo(job.getMinSalary()) < 0) {
+                throw new com.example.Human_Resource_Managment.ExceptionHandling.ValidationException(
+                    "Maximum salary must be greater than or equal to minimum salary");
+            }
+        }
 
-        Job saved = jobRepo.save(job);
+        Job saved;
+        try {
+            saved = jobRepo.save(job);
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            throw new com.example.Human_Resource_Managment.ExceptionHandling.ValidationException(
+                "Job ID " + job.getJobId() + " already exists. Another user may have created this job.");
+        }
+        
         return ResponseEntity.ok(convertJobToMap(saved));
     }
 

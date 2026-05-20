@@ -3,8 +3,9 @@ package com.example.Human_Resource_Managment.Entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.AssertTrue;
+import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
@@ -28,11 +29,13 @@ public class Job {
     @Column(name = "job_title", nullable = false, length = 35)
     private String jobTitle;
 
-    @PositiveOrZero(message = "Minimum salary must be zero or greater")
+    @Positive(message = "Minimum salary must be greater than zero")
+    @Digits(integer = 6, fraction = 0, message = "Minimum salary can have maximum 6 digits")
     @Column(name = "min_salary", precision = 6, scale = 0)
     private BigDecimal minSalary;
 
-    @PositiveOrZero(message = "Maximum salary must be zero or greater")
+    @Positive(message = "Maximum salary must be greater than zero")
+    @Digits(integer = 6, fraction = 0, message = "Maximum salary can have maximum 6 digits")
     @Column(name = "max_salary", precision = 6, scale = 0)
     private BigDecimal maxSalary;
 

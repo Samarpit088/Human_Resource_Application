@@ -9,6 +9,8 @@ import com.example.Human_Resource_Managment.Repository.LocationsRepo;
 import com.example.Human_Resource_Managment.ExceptionHandling.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -112,6 +114,7 @@ public class DepartmentController {
 
     /**
      * POST endpoint to create a new department
+     * Uses READ_COMMITTED transaction isolation for better performance during load testing
      * 
      * Supports:
      * - departmentId (required)
@@ -128,51 +131,85 @@ public class DepartmentController {
      * }
      */
     @PostMapping("/api/v1/departments")
-    public ResponseEntity<Department> createDepartment(@RequestBody Map<String, Object> departmentData) {
-        Department department = new Department();
-        
-        // Set required fields
-        if (!departmentData.containsKey("departmentId")) {
-            throw new IllegalArgumentException("departmentId is required");
-        }
-        if (!departmentData.containsKey("departmentName")) {
-            throw new IllegalArgumentException("departmentName is required");
-        }
-        
-        department.setDepartmentId(Long.valueOf(departmentData.get("departmentId").toString()));
-        department.setDepartmentName((String) departmentData.get("departmentName"));
-        
-        // Set location if provided
-        if (departmentData.containsKey("location") && departmentData.get("location") != null) {
-            Map<String, Object> locationMap = (Map<String, Object>) departmentData.get("location");
-            if (locationMap.containsKey("locationId")) {
-                Long locationId = Long.valueOf(locationMap.get("locationId").toString());
-                Locations location = locationsRepo.findById(locationId)
-                        .orElseThrow(() -> new ResourceNotFoundException("Location not found with id: " + locationId));
-                department.setLocation(location);
+    @Transactional(isolation = Isolation.READ_COMMITTED)
+    public ResponseEntity<Map<String, Object>> createDepartment(@RequestBody Map<String, Object> departmentData) {
+        try {
+            Department department = new Department();
+            
+            // Set required fields
+            if (!departmentData.containsKey("departmentId")) {
+                throw new IllegalArgumentException("departmentId is required");
             }
-        }
-        
-        // Set manager if provided
-        if (departmentData.containsKey("manager") && departmentData.get("manager") != null) {
-            Map<String, Object> managerMap = (Map<String, Object>) departmentData.get("manager");
-            if (managerMap.containsKey("employeeId")) {
-                Long managerId = Long.valueOf(managerMap.get("employeeId").toString());
-                Employees manager = employeeRepo.findById(managerId)
-                        .orElseThrow(() -> new ResourceNotFoundException("Employee not found with id: " + managerId));
-                department.setManager(manager);
+            if (!departmentData.containsKey("departmentName")) {
+                throw new IllegalArgumentException("departmentName is required");
             }
+            
+            Long departmentId = Long.valueOf(departmentData.get("departmentId").toString());
+            
+            // Check if department ID already exists
+            if (departmentRepo.existsById(departmentId)) {
+                throw new com.example.Human_Resource_Managment.ExceptionHandling.ValidationException(
+                    "Department ID " + departmentId + " already exists");
+            }
+            
+            department.setDepartmentId(departmentId);
+            department.setDepartmentName((String) departmentData.get("departmentName"));
+            
+            // Set location if provided
+            if (departmentData.containsKey("location") && departmentData.get("location") != null) {
+                Map<String, Object> locationMap = (Map<String, Object>) departmentData.get("location");
+                if (locationMap.containsKey("locationId")) {
+                    Long locationId = Long.valueOf(locationMap.get("locationId").toString());
+                    Locations location = locationsRepo.findById(locationId)
+                            .orElseThrow(() -> new ResourceNotFoundException("Location not found with id: " + locationId));
+                    department.setLocation(location);
+                }
+            }
+            
+            // Set manager if provided
+            if (departmentData.containsKey("manager") && departmentData.get("manager") != null) {
+                Map<String, Object> managerMap = (Map<String, Object>) departmentData.get("manager");
+                if (managerMap.containsKey("employeeId")) {
+                    Long managerId = Long.valueOf(managerMap.get("employeeId").toString());
+                    Employees manager = employeeRepo.findById(managerId)
+                            .orElseThrow(() -> new ResourceNotFoundException("Employee not found with id: " + managerId));
+                    department.setManager(manager);
+                }
+            }
+            
+            // Save the department with proper error handling for race conditions
+            Department savedDepartment;
+            try {
+                savedDepartment = departmentRepo.save(department);
+            } catch (org.springframework.dao.DataIntegrityViolationException e) {
+                throw new com.example.Human_Resource_Managment.ExceptionHandling.ValidationException(
+                    "Department ID " + department.getDepartmentId() + " already exists. Another user may have created this department.");
+            }
+            
+            // If manager was set, update the manager's department assignment
+            // Note: For a new department, there are no existing employees to update
+            if (savedDepartment.getManager() != null) {
+                Employees manager = savedDepartment.getManager();
+                // Only update manager's department if not already set to this department
+                if (manager.getDepartment() == null || !manager.getDepartment().getDepartmentId().equals(savedDepartment.getDepartmentId())) {
+                    manager.setDepartment(savedDepartment);
+                    employeeRepo.save(manager);
+                }
+            }
+            
+            // Convert to Map to avoid lazy loading issues
+            return ResponseEntity.ok(convertDepartmentToMap(savedDepartment));
+        } catch (com.example.Human_Resource_Managment.ExceptionHandling.ValidationException | 
+                 com.example.Human_Resource_Managment.ExceptionHandling.ResourceNotFoundException |
+                 IllegalArgumentException e) {
+            // Re-throw known exceptions to be handled by GlobalExceptionHandler
+            throw e;
+        } catch (Exception e) {
+            // Log unexpected errors with full stack trace
+            System.err.println("Unexpected error creating department: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("Failed to create department: " + e.getMessage(), e);
         }
-        
-        // Save the department
-        Department savedDepartment = departmentRepo.save(department);
-        
-        // If manager was set, update all employees in this department to have this manager
-        if (department.getManager() != null) {
-            departmentService.changeDepartmentManager(savedDepartment.getDepartmentId(), department.getManager().getEmployeeId());
-        }
-        
-        return ResponseEntity.ok(savedDepartment);
     }
 
     /**
@@ -270,12 +307,12 @@ public class DepartmentController {
         // Apply filters
         java.util.stream.Stream<Department> stream = allDepartments.stream();
         
-        // Search filter
+        // Search filter - matches names starting with the search term
         if (query != null && !query.trim().isEmpty()) {
             String searchTerm = query.toLowerCase();
             stream = stream.filter(dept -> 
-                (dept.getDepartmentName() != null && dept.getDepartmentName().toLowerCase().contains(searchTerm)) ||
-                dept.getDepartmentId().toString().contains(searchTerm)
+                (dept.getDepartmentName() != null && dept.getDepartmentName().toLowerCase().startsWith(searchTerm)) ||
+                dept.getDepartmentId().toString().startsWith(searchTerm)
             );
         }
         
