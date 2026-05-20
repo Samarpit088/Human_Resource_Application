@@ -2,6 +2,7 @@ package com.example.Human_Resource_Managment.Entity;
 
 import java.util.List;
 
+import jakarta.persistence.Cacheable;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

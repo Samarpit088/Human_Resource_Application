@@ -17,5 +17,6 @@ import com.example.Human_Resource_Managment.Entity.Countries;
 )
 public interface CountriesRepo extends JpaRepository<Countries, String> {
 
-
+    // Find countries by region ID
+    Page<Countries> findByRegionRegionId(Long regionId, Pageable pageable);
 }
