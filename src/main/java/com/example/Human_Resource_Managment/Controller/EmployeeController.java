@@ -9,6 +9,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -126,6 +128,9 @@ public class EmployeeController {
     /**
      * POST endpoint to create a new employee
      * 
+     * Uses READ_COMMITTED transaction isolation for better performance during load testing
+     * while still preventing dirty reads
+     * 
      * Supports:
      * - employeeId (required)
      * - firstName, lastName (required)
@@ -149,24 +154,75 @@ public class EmployeeController {
      * }
      */
     @PostMapping
-    public ResponseEntity<Employees> createEmployee(@RequestBody Map<String, Object> employeeData) {
+    @Transactional(isolation = Isolation.READ_COMMITTED)
+    public ResponseEntity<Map<String, Object>> createEmployee(@RequestBody Map<String, Object> employeeData) {
+        // Log incoming request data for debugging
+        System.out.println("=== CREATE EMPLOYEE REQUEST ===");
+        System.out.println("Request data: " + employeeData);
+        System.out.println("Contains phoneNumber key: " + employeeData.containsKey("phoneNumber"));
+        if (employeeData.containsKey("phoneNumber")) {
+            System.out.println("Phone number value: '" + employeeData.get("phoneNumber") + "'");
+            System.out.println("Phone number is null: " + (employeeData.get("phoneNumber") == null));
+        }
+        System.out.println("===============================");
+        
         Employees employee = new Employees();
         
         // Set required fields
         if (!employeeData.containsKey("employeeId")) {
             throw new ValidationException("employeeId is required");
         }
-        employee.setEmployeeId(Long.valueOf(employeeData.get("employeeId").toString()));
+        Long employeeId = Long.valueOf(employeeData.get("employeeId").toString());
         
-        if (!employeeData.containsKey("lastName")) {
-            throw new ValidationException("lastName is required");
+        System.out.println("Checking if employee ID " + employeeId + " already exists...");
+        
+        // Check if employee ID already exists
+        employeeRepo.findById(employeeId).ifPresent(emp -> {
+            System.out.println("DUPLICATE FOUND! Employee ID " + employeeId + " already exists");
+            throw new ValidationException("Employee ID " + employeeId + " already exists");
+        });
+        
+        System.out.println("Employee ID " + employeeId + " is available, proceeding with creation...");
+        
+        employee.setEmployeeId(employeeId);
+        
+        // First name is REQUIRED
+        if (!employeeData.containsKey("firstName") || employeeData.get("firstName") == null) {
+            throw new ValidationException("First name is required");
         }
-        employee.setLastName((String) employeeData.get("lastName"));
+        String firstName = ((String) employeeData.get("firstName")).trim();
+        if (firstName.isEmpty()) {
+            throw new ValidationException("First name cannot be empty");
+        }
+        if (firstName.length() > 20) {
+            throw new ValidationException("First name cannot exceed 20 characters");
+        }
+        employee.setFirstName(firstName);
+        
+        // Last name is REQUIRED
+        if (!employeeData.containsKey("lastName") || employeeData.get("lastName") == null) {
+            throw new ValidationException("Last name is required");
+        }
+        String lastName = ((String) employeeData.get("lastName")).trim();
+        if (lastName.isEmpty()) {
+            throw new ValidationException("Last name cannot be empty");
+        }
+        if (lastName.length() > 25) {
+            throw new ValidationException("Last name cannot exceed 25 characters");
+        }
+        employee.setLastName(lastName);
         
         if (!employeeData.containsKey("email")) {
             throw new ValidationException("email is required");
         }
         String email = (String) employeeData.get("email");
+        if (email == null || email.trim().isEmpty()) {
+            throw new ValidationException("Email cannot be empty");
+        }
+        email = email.trim();
+        if (email.length() > 25) {
+            throw new ValidationException("Email cannot exceed 25 characters");
+        }
         // Check if email already exists
         employeeRepo.findByEmail(email).ifPresent(emp -> {
             throw new ValidationException("Email already exists");
@@ -178,14 +234,20 @@ public class EmployeeController {
         }
         employee.setHireDate(LocalDate.parse(employeeData.get("hireDate").toString()));
         
-        // Set optional fields
-        if (employeeData.containsKey("firstName") && employeeData.get("firstName") != null) {
-            employee.setFirstName((String) employeeData.get("firstName"));
+        // Phone number validation - REQUIRED field
+        if (!employeeData.containsKey("phoneNumber") || employeeData.get("phoneNumber") == null) {
+            throw new ValidationException("Phone number is required");
         }
-        
-        if (employeeData.containsKey("phoneNumber") && employeeData.get("phoneNumber") != null) {
-            employee.setPhoneNumber((String) employeeData.get("phoneNumber"));
+        String phoneNumber = ((String) employeeData.get("phoneNumber")).trim();
+        if (phoneNumber.isEmpty()) {
+            throw new ValidationException("Phone number cannot be empty");
         }
+        // Validate phone number length (exactly 10 digits)
+        String phoneDigits = phoneNumber.replaceAll("[^0-9]", "");
+        if (phoneDigits.length() != 10) {
+            throw new ValidationException("Phone number must be exactly 10 digits");
+        }
+        employee.setPhoneNumber(phoneNumber);
         
         if (employeeData.containsKey("salary") && employeeData.get("salary") != null) {
             employee.setSalary(new BigDecimal(employeeData.get("salary").toString()));
@@ -222,8 +284,22 @@ public class EmployeeController {
             }
         }
         
-        // Save the employee
-        Employees savedEmployee = employeeRepo.save(employee);
+        // Save the employee with proper error handling for race conditions
+        Employees savedEmployee;
+        try {
+            savedEmployee = employeeRepo.save(employee);
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            // Handle duplicate key violations that might occur in race conditions
+            String errorMessage = e.getMessage();
+            if (errorMessage != null && errorMessage.contains("Duplicate entry")) {
+                if (errorMessage.contains("PRIMARY")) {
+                    throw new ValidationException("Employee ID " + employee.getEmployeeId() + " already exists. Another user may have created this employee.");
+                } else if (errorMessage.contains("email")) {
+                    throw new ValidationException("Email " + employee.getEmail() + " already exists. Another user may have used this email.");
+                }
+            }
+            throw new ValidationException("Failed to create employee: " + e.getMessage());
+        }
         
         // Create initial job history record if employee has job, department, and salary
         if (savedEmployee.getJob() != null && savedEmployee.getDepartment() != null && savedEmployee.getSalary() != null) {
@@ -238,10 +314,31 @@ public class EmployeeController {
             } catch (Exception e) {
                 // Log error but don't fail employee creation
                 System.err.println("Failed to create initial job history for employee " + savedEmployee.getEmployeeId() + ": " + e.getMessage());
+                e.printStackTrace();
             }
         }
         
-        return ResponseEntity.ok(savedEmployee);
+        // Convert to Map to avoid lazy loading serialization issues
+        Map<String, Object> response = new java.util.HashMap<>();
+        response.put("employeeId", savedEmployee.getEmployeeId());
+        response.put("firstName", savedEmployee.getFirstName());
+        response.put("lastName", savedEmployee.getLastName());
+        response.put("email", savedEmployee.getEmail());
+        response.put("phoneNumber", savedEmployee.getPhoneNumber());
+        response.put("hireDate", savedEmployee.getHireDate());
+        response.put("salary", savedEmployee.getSalary());
+        
+        if (savedEmployee.getJob() != null) {
+            response.put("jobId", savedEmployee.getJob().getJobId());
+            response.put("jobTitle", savedEmployee.getJob().getJobTitle());
+        }
+        
+        if (savedEmployee.getDepartment() != null) {
+            response.put("departmentId", savedEmployee.getDepartment().getDepartmentId());
+            response.put("departmentName", savedEmployee.getDepartment().getDepartmentName());
+        }
+        
+        return ResponseEntity.ok(response);
     }
 
     /**
@@ -352,26 +449,34 @@ public class EmployeeController {
         Long newDepartmentId = null;
         BigDecimal newSalary = null;
 
-        // Update first name if provided
-        if (updates.containsKey("firstName") && updates.get("firstName") != null) {
-            String firstName = (String) updates.get("firstName");
-            if (!firstName.trim().isEmpty() && firstName.length() <= 20) {
-                employee.setFirstName(firstName);
-            } else if (firstName.length() > 20) {
+        // Update first name if provided - REQUIRED, cannot be empty
+        if (updates.containsKey("firstName")) {
+            if (updates.get("firstName") == null) {
+                throw new ValidationException("First name cannot be null");
+            }
+            String firstName = ((String) updates.get("firstName")).trim();
+            if (firstName.isEmpty()) {
+                throw new ValidationException("First name cannot be empty");
+            }
+            if (firstName.length() > 20) {
                 throw new ValidationException("First name cannot exceed 20 characters");
             }
+            employee.setFirstName(firstName);
         }
 
-        // Update last name if provided
-        if (updates.containsKey("lastName") && updates.get("lastName") != null) {
-            String lastName = (String) updates.get("lastName");
-            if (!lastName.trim().isEmpty() && lastName.length() <= 25) {
-                employee.setLastName(lastName);
-            } else if (lastName.trim().isEmpty()) {
-                throw new ValidationException("Last name is required");
-            } else if (lastName.length() > 25) {
+        // Update last name if provided - REQUIRED, cannot be empty
+        if (updates.containsKey("lastName")) {
+            if (updates.get("lastName") == null) {
+                throw new ValidationException("Last name cannot be null");
+            }
+            String lastName = ((String) updates.get("lastName")).trim();
+            if (lastName.isEmpty()) {
+                throw new ValidationException("Last name cannot be empty");
+            }
+            if (lastName.length() > 25) {
                 throw new ValidationException("Last name cannot exceed 25 characters");
             }
+            employee.setLastName(lastName);
         }
 
         // Update email if provided
@@ -392,14 +497,24 @@ public class EmployeeController {
             }
         }
 
-        // Update phone number if provided
-        if (updates.containsKey("phoneNumber") && updates.get("phoneNumber") != null) {
-            String phoneNumber = (String) updates.get("phoneNumber");
-            if (phoneNumber.length() <= 20) {
-                employee.setPhoneNumber(phoneNumber);
-            } else {
+        // Update phone number if provided - REQUIRED, cannot be empty
+        if (updates.containsKey("phoneNumber")) {
+            if (updates.get("phoneNumber") == null) {
+                throw new ValidationException("Phone number cannot be null");
+            }
+            String phoneNumber = ((String) updates.get("phoneNumber")).trim();
+            if (phoneNumber.isEmpty()) {
+                throw new ValidationException("Phone number cannot be empty");
+            }
+            // Validate phone number length (exactly 10 digits)
+            String phoneDigits = phoneNumber.replaceAll("[^0-9]", "");
+            if (phoneDigits.length() != 10) {
+                throw new ValidationException("Phone number must be exactly 10 digits");
+            }
+            if (phoneNumber.length() > 20) {
                 throw new ValidationException("Phone number cannot exceed 20 characters");
             }
+            employee.setPhoneNumber(phoneNumber);
         }
 
         // Update commission percentage if provided
@@ -728,6 +843,7 @@ public class EmployeeController {
     @GetMapping("/search")
     public ResponseEntity<Map<String, Object>> searchEmployees(
             @RequestParam(required = false) String query,
+            @RequestParam(required = false) String email,
             @RequestParam(required = false) Long departmentId,
             @RequestParam(required = false) String jobId,
             @RequestParam(defaultValue = "0") int page,
@@ -739,14 +855,28 @@ public class EmployeeController {
         // Apply filters
         java.util.stream.Stream<Employees> stream = allEmployees.stream();
         
-        // Search filter
+        // Search filter - matches firstName or full name starting with search term (NOT lastName alone)
         if (query != null && !query.trim().isEmpty()) {
             String searchTerm = query.toLowerCase();
+            stream = stream.filter(emp -> {
+                // Combine first name and last name with a space
+                String fullName = ((emp.getFirstName() != null ? emp.getFirstName() : "") + " " + 
+                                  (emp.getLastName() != null ? emp.getLastName() : "")).toLowerCase().trim();
+                String firstName = emp.getFirstName() != null ? emp.getFirstName().toLowerCase() : "";
+                
+                // Check if full name starts with search term OR first name starts OR employee ID starts
+                // Note: We don't check lastName alone to avoid confusion (e.g., typing "a" shouldn't show "Samuel Adeyemi")
+                return fullName.startsWith(searchTerm) || 
+                       firstName.startsWith(searchTerm) ||
+                       emp.getEmployeeId().toString().startsWith(searchTerm);
+            });
+        }
+        
+        // Email filter - separate parameter for email search
+        if (email != null && !email.trim().isEmpty()) {
+            String emailTerm = email.toLowerCase();
             stream = stream.filter(emp -> 
-                (emp.getFirstName() != null && emp.getFirstName().toLowerCase().contains(searchTerm)) ||
-                (emp.getLastName() != null && emp.getLastName().toLowerCase().contains(searchTerm)) ||
-                (emp.getEmail() != null && emp.getEmail().toLowerCase().contains(searchTerm)) ||
-                emp.getEmployeeId().toString().contains(searchTerm)
+                emp.getEmail() != null && emp.getEmail().toLowerCase().startsWith(emailTerm)
             );
         }
         

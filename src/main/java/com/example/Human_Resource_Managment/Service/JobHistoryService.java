@@ -329,12 +329,14 @@ public class JobHistoryService {
 
     /**
      * Build change description
+     * Note: This method is called from handleJobChange which has access to employee and salary
+     * We need to pass the old and new salary to determine if it's a hike or decrease
      */
     private String buildChangeDescription(boolean salaryChanged, boolean jobChanged, boolean departmentChanged) {
         StringBuilder description = new StringBuilder();
         
         if (salaryChanged) {
-            description.append("Salary Hike");
+            description.append("Salary updated");
         }
         if (jobChanged) {
             if (!description.isEmpty()) description.append(" and ");
@@ -374,9 +376,19 @@ public class JobHistoryService {
     @Transactional(readOnly = true)
     public JobHistoryDTO getCurrentJobHistoryDTO(Long employeeId) {
         log.info("Fetching current job history for employee ID: {} from DATABASE (NO CACHE)", employeeId);
-        JobHistory jobHistory = jobHistoryRepo.findByIdEmployeeIdAndEndDate(employeeId, FAR_FUTURE_DATE)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "No active job history found for employee ID: " + employeeId));
+        
+        // First verify employee exists
+        Employees employee = employeeRepo.findById(employeeId)
+                .orElseThrow(() -> new ResourceNotFoundException("Employee not found with ID: " + employeeId));
+        
+        Optional<JobHistory> jobHistoryOpt = jobHistoryRepo.findByIdEmployeeIdAndEndDate(employeeId, FAR_FUTURE_DATE);
+        
+        if (jobHistoryOpt.isEmpty()) {
+            log.info("No active job history found for employee ID: {}. Returning null.", employeeId);
+            return null;
+        }
+        
+        JobHistory jobHistory = jobHistoryOpt.get();
         
         // Force initialization of all lazy-loaded associations
         Hibernate.initialize(jobHistory.getJob());
@@ -416,11 +428,18 @@ public class JobHistoryService {
     @Cacheable(value = "jobHistory", key = "#employeeId", unless = "#result == null || #result.isEmpty()")
     public List<JobHistoryDTO> getEmployeeJobHistoryDTO(Long employeeId) {
         log.info("=== CACHE MISS: Fetching all job history for employee ID: {} from DATABASE ===", employeeId);
+        
+        // First verify employee exists
+        Employees employee = employeeRepo.findById(employeeId)
+                .orElseThrow(() -> new ResourceNotFoundException("Employee not found with ID: " + employeeId));
+        
         List<JobHistory> history = jobHistoryRepo.findByIdEmployeeIdOrderByIdStartDateDesc(employeeId);
         log.info("Found {} job history records for employee ID: {}", history.size(), employeeId);
         
+        // If no job history exists, return empty list instead of throwing error
         if (history.isEmpty()) {
-            throw new ResourceNotFoundException("No job history found for employee ID: " + employeeId);
+            log.info("No job history found for employee ID: {}. Returning empty list.", employeeId);
+            return new ArrayList<>();
         }
         
         // Force initialization of all lazy-loaded associations for all records

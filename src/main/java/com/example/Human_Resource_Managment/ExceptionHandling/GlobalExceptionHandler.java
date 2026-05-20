@@ -33,6 +33,13 @@ public class GlobalExceptionHandler {
                 .body(createErrorResponse(ex.getMessage(), HttpStatus.BAD_REQUEST));
     }
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Map<String, Object>> handleIllegalArgumentException(IllegalArgumentException ex) {
+        log.error("Invalid argument: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(createErrorResponse(ex.getMessage(), HttpStatus.BAD_REQUEST));
+    }
+
     @ExceptionHandler(JobHistoryException.class)
     public ResponseEntity<Map<String, Object>> handleJobHistoryException(JobHistoryException ex) {
         log.error("Job history error: {}", ex.getMessage(), ex);
@@ -63,6 +70,23 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGenericException(Exception ex) {
         log.error("Unexpected error: {}", ex.getMessage(), ex);
+        
+        // Check for duplicate key violations (race condition on employee_id or email)
+        String message = ex.getMessage();
+        if (message != null) {
+            if (message.contains("Duplicate entry") || message.contains("duplicate key")) {
+                if (message.contains("PRIMARY")) {
+                    return ResponseEntity.status(HttpStatus.CONFLICT)
+                            .body(createErrorResponse("Employee ID already exists. Please use a different ID.", HttpStatus.CONFLICT));
+                } else if (message.contains("email")) {
+                    return ResponseEntity.status(HttpStatus.CONFLICT)
+                            .body(createErrorResponse("Email already exists. Please use a different email.", HttpStatus.CONFLICT));
+                }
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body(createErrorResponse("Duplicate entry detected. Please check your input.", HttpStatus.CONFLICT));
+            }
+        }
+        
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(createErrorResponse("An unexpected error occurred", HttpStatus.INTERNAL_SERVER_ERROR));
     }
