@@ -25,16 +25,16 @@ public interface LocationDetailsProjection {
     String getStateProvince();
 
     // Country information
-    @Value("#{target.country.countryId}")
+    @Value("#{target.country?.countryId}")
     String getCountryId();
 
-    @Value("#{target.country.countryName}")
+    @Value("#{target.country?.countryName}")
     String getCountryName();
 
     // Region information through country
-    @Value("#{target.country.region.regionId}")
+    @Value("#{target.country?.region?.regionId}")
     Long getRegionId();
 
-    @Value("#{target.country.region.regionName}")
+    @Value("#{target.country?.region?.regionName}")
     String getRegionName();
 }
