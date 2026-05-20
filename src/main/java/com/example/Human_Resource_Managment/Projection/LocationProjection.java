@@ -21,4 +21,5 @@ public interface LocationProjection {
     String getStreetAddress();
 
     String getPostalCode();
+    //7799
 }
