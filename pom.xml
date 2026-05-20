@@ -79,6 +79,12 @@
 			<artifactId>jackson-datatype-jsr310</artifactId>
 		</dependency>
 
+		<!-- Spring AOP for cache logging -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-aop</artifactId>
+		</dependency>
+
 		<!-- Dotenv -->
 		<dependency>
 			<groupId>me.paulschwarz</groupId>
